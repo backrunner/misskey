@@ -479,8 +479,8 @@ const createInitialScrollListener = () => {
 		initialScrollCleaner = (props.pagination.reversed ? onScrollUpOnce : onScrollDownOnce)(contentEl, () => {
 			backed = false;
 			const cleaner = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, () => {
-				backed = true;
-				nextTick(() => {
+				setTimeout(() => {
+					backed = true;
 					createInitialScrollListener();
 				});
 			}, props.tolerance, true, false);
