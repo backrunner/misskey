@@ -151,10 +151,13 @@ const BACKGROUND_PAUSE_WAIT_SEC = 10;
 
 // 先頭が表示されているかどうかを検出
 // https://qiita.com/mkataigi/items/0154aefd2223ce23398e
-let scrollObserver = $ref<IntersectionObserver>();
+let scrollObserver = $ref<IntersectionObserver | null>(null);
 
 watch([() => props.pagination.reversed, $$(scrollableElement)], () => {
-	if (scrollObserver) scrollObserver.disconnect();
+	if (scrollObserver) {
+		scrollObserver.disconnect();
+		scrollObserver = null;
+	}
 
 	scrollObserver = new IntersectionObserver(entries => {
 		backed = entries[0].isIntersecting;
@@ -201,9 +204,15 @@ async function init(): Promise<void> {
 		...params,
 		limit: props.pagination.limit ?? 10,
 	}).then(res => {
-		for (let i = 0; i < res.length; i++) {
+		for (let i = 0; i < res.length; i += 3) {
 			const item = res[i];
-			if (i === 3) item._shouldInsertAd_ = true;
+			if (!item) {
+				continue;
+			}
+			if (i === 3) {
+				item._shouldInsertAd_ = true;
+				break;
+			}
 		}
 
 		if (res.length === 0 || props.pagination.noPaging) {
@@ -241,9 +250,9 @@ const fetchMore = async (): Promise<void> => {
 			untilId: Array.from(items.value.keys()).at(-1),
 		}),
 	}).then(res => {
-		for (let i = 0; i < res.length; i++) {
-			const item = res[i];
-			if (i === 10) item._shouldInsertAd_ = true;
+		for (let i = 0; i < res.length; i += 10) {
+			if (!res[i]) continue;
+			res[i]._shouldInsertAd_ = true;
 		}
 
 		const reverseConcat = _res => {
@@ -388,9 +397,11 @@ const prepend = (item: MisskeyEntity): void => {
  */
 function unshiftItems(newItems: MisskeyEntity[]) {
 	const length = newItems.length + items.value.size;
-	items.value = new Map([...arrayToEntries(newItems), ...items.value].slice(0, props.displayLimit));
+	const mapEntries = [...arrayToEntries(newItems), ...items.value].slice(0, props.displayLimit);
+	items.value = new Map(mapEntries);
 
 	if (length >= props.displayLimit) more.value = true;
+	offset.value = mapEntries.length;
 }
 
 /**
@@ -399,9 +410,11 @@ function unshiftItems(newItems: MisskeyEntity[]) {
  */
 function concatItems(oldItems: MisskeyEntity[]) {
 	const length = oldItems.length + items.value.size;
-	items.value = new Map([...items.value, ...arrayToEntries(oldItems)].slice(0, props.displayLimit));
+	const mapEntries = [...items.value, ...arrayToEntries(oldItems)].slice(0, props.displayLimit);
+	items.value = new Map(mapEntries);
 
 	if (length >= props.displayLimit) more.value = true;
+	offset.value = mapEntries.length;
 }
 
 function executeQueue() {
