@@ -247,8 +247,8 @@ export class FileServerService {
 			);
 		}
 
-		// verify the signature as what the external media proxy do when external media proxy is enabled.
-		if (this.config.externalMediaProxyEnabled) {
+		// verify the signature as what the external media proxy do when media proxy key was set.
+		if (this.config.mediaProxyKey) {
 			const toVerify = request.query.sign;
 			const sign = getProxySign(url, this.config.mediaProxyKey, url);
 			if (toVerify !== sign) {
