@@ -8,7 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<MkStickyContainer>
 		<template #header><XHeader :actions="headerActions"/></template>
 		<MkSpacer :contentMax="900">
-			<div class="_gaps">
+			<div :class="['_gaps', $style.container]">
 				<div>
 					<MkInput v-model="host" :debounce="true" class="">
 						<template #prefix><i class="ti ti-search"></i></template>
@@ -106,6 +106,10 @@ definePageMetadata(computed(() => ({
 </script>
 
 <style lang="scss" module>
+.container {
+	overflow-y: auto;
+}
+
 .instances {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
