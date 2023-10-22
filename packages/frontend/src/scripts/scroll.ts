@@ -134,40 +134,41 @@ export function getBodyScrollHeight() {
 }
 
 export function onScrollDownOnce(el: HTMLElement, cb: () => unknown): () => void {
-	const containerEl = getScrollContainer(el) ?? document.body;
+	const containerEl = getScrollContainer(el);
+	const targetEl = document.body ?? window;
 
-	let initialScrollTop = containerEl.scrollTop;
+	let initialScrollTop = (containerEl?.scrollTop || 0);
 
 	const listener = () => {
-		if (containerEl.scrollTop > initialScrollTop) {
+		if ((containerEl?.scrollTop || 0) > initialScrollTop) {
 			cb();
-			containerEl.removeEventListener('scroll', listener);
+			targetEl.removeEventListener('scroll', listener);
 		}
-		initialScrollTop = containerEl.scrollTop;
 	};
 
-	containerEl.addEventListener('scroll', listener, { passive: true });
+	targetEl.addEventListener('scroll', listener, { passive: true });
 
 	return () => {
-		containerEl.removeEventListener('scroll', listener);
+		targetEl.removeEventListener('scroll', listener);
 	};
 }
 
 export function onScrollUpOnce(el: HTMLElement, cb: () => unknown): () => void {
-	const containerEl = getScrollContainer(el) ?? document.body;
+	const containerEl = getScrollContainer(el);
+	const targetEl = containerEl ?? window;
 
-	let initialScrollTop = containerEl.scrollTop;
+	let initialScrollTop = containerEl?.scrollTop || 0;
 
 	const listener = () => {
-		if (containerEl.scrollTop < initialScrollTop) {
+		if ((containerEl?.scrollTop || 0) < initialScrollTop) {
 			cb();
-			containerEl.removeEventListener('scroll', listener);
+			targetEl.removeEventListener('scroll', listener);
 		}
 	};
 
-	containerEl.addEventListener('scroll', listener, { passive: true });
+	targetEl.addEventListener('scroll', listener, { passive: true });
 
 	return () => {
-		containerEl.removeEventListener('scroll', listener);
+		targetEl.removeEventListener('scroll', listener);
 	};
 }
