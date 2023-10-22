@@ -190,7 +190,7 @@ watch($$(rootEl), () => {
 watch([$$(backed), $$(contentEl)], () => {
 	if (!backed) {
 		if (!contentEl) return;
-		scrollRemove = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, executeQueue, props.tolerance);
+		scrollRemove = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, executeQueue, props.tolerance, false, !props.disableObserver);
 	} else {
 		if (scrollRemove) scrollRemove();
 		scrollRemove = null;
@@ -483,7 +483,7 @@ const createInitialScrollListener = () => {
 				nextTick(() => {
 					createInitialScrollListener();
 				});
-			}, props.tolerance, true);
+			}, props.tolerance, true, false);
 			if (cleaner) initialScrollCleaner = cleaner;
 		});
 	});
