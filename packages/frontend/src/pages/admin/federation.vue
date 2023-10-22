@@ -8,7 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<MkStickyContainer>
 		<template #header><XHeader :actions="headerActions"/></template>
 		<MkSpacer :contentMax="900">
-			<div :class="['_gaps', $style.container]">
+			<div class="_gaps">
 				<div>
 					<MkInput v-model="host" :debounce="true" class="">
 						<template #prefix><i class="ti ti-search"></i></template>
