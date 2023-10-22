@@ -473,17 +473,25 @@ const createInitialScrollListener = () => {
 	if (!props.disableObserver || !contentEl) {
 		return;
 	}
+	if (initialScrollCleaner) {
+		initialScrollCleaner();
+	}
 	initialScrollCleaner = (props.pagination.reversed ? onScrollUpOnce : onScrollDownOnce)(contentEl, () => {
 		backed = false;
 		const cleaner = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, () => {
 			backed = true;
-			nextTick(() => {
-				createInitialScrollListener();
-			});
 		}, TOLERANCE);
 		if (cleaner) initialScrollCleaner = cleaner;
 	});
 }
+
+watch($$(contentEl), () => {
+	if (!props.disableObserver) {
+		createInitialScrollListener();
+	} else {
+		initialScrollCleaner?.();
+	}
+});
 
 onMounted(() => {
 	inited.then(() => {
