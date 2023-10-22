@@ -106,7 +106,7 @@ const emit = defineEmits<{
 let rootEl = $shallowRef<HTMLElement>();
 
 // 遡り中かどうか
-let backed = $ref(false);
+let backed = $ref(true);
 
 let scrollRemove = $ref<(() => void) | null>(null);
 
