@@ -46,7 +46,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { computed, ComputedRef, isRef, nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
-import { onScrollTop, isTopVisible, getBodyScrollHeight, getScrollContainer, onScrollBottom, scrollToBottom, scroll, isBottomVisible } from '@/scripts/scroll.js';
+import { onScrollTop, isTopVisible, getBodyScrollHeight, getScrollContainer, onScrollBottom, scrollToBottom, scroll, isBottomVisible, onScrollDownOnce, onScrollUpOnce } from '@/scripts/scroll.js';
 import { useDocumentVisibility } from '@/scripts/use-document-visibility.js';
 import MkButton from '@/components/MkButton.vue';
 import { defaultStore } from '@/store.js';
@@ -95,10 +95,9 @@ const props = withDefaults(defineProps<{
 	pagination: Paging;
 	disableAutoLoad?: boolean;
 	displayLimit?: number;
-	rootPadding?: number;
+	disableObserver?: boolean;
 }>(), {
 	displayLimit: 20,
-	rootPadding: 0,
 });
 
 const emit = defineEmits<{
@@ -155,39 +154,27 @@ const BACKGROUND_PAUSE_WAIT_SEC = 10;
 // https://qiita.com/mkataigi/items/0154aefd2223ce23398e
 let scrollObserver = $ref<IntersectionObserver | null>(null);
 
-const getObserverRootMargin = () => {
-	let rootMargin: string = '';
-	if (props.rootPadding) {
-		rootMargin = props.pagination.reversed ? `calc(-100% + ${props.rootPadding}px) 0px calc(100% - ${props.rootPadding}px) 0px` : `calc(100% - ${props.rootPadding}px) 0px calc(-100% + ${props.rootPadding}px) 0px`;
-	} else {
-		rootMargin = props.pagination.reversed ? '-100% 0px 100% 0px' : '100% 0px -100% 0px';
-	}
-	return rootMargin;
-}
-
 const createScrollObserver = () => {
 	if (scrollObserver) {
 		scrollObserver.disconnect();
 		scrollObserver = null;
 	}
-
 	scrollObserver = new IntersectionObserver(entries => {
 		backed = entries[0].isIntersecting;
 	}, {
 		root: scrollableElement,
-		rootMargin: getObserverRootMargin(),
+		rootMargin: props.pagination.reversed ? '-100% 0px 100% 0px' : '100% 0px -100% 0px',
 		threshold: 0.01,
 	});
 };
 
-watch([() => props.pagination.reversed, $$(scrollableElement)], createScrollObserver, { immediate: true });
-
-watch(() => props.rootPadding, () => {
-	if (!scrollObserver) {
-		return;
+watch([() => props.pagination.reversed, $$(scrollableElement)], () => {
+	if (props.disableObserver) {
+		initialScrollCleaner?.();
+	} else {
+		createScrollObserver();
 	}
-	createScrollObserver();
-});
+}, { immediate: true });
 
 watch($$(rootEl), () => {
 	scrollObserver?.disconnect();
@@ -199,7 +186,6 @@ watch($$(rootEl), () => {
 watch([$$(backed), $$(contentEl)], () => {
 	if (!backed) {
 		if (!contentEl) return;
-
 		scrollRemove = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, executeQueue, TOLERANCE);
 	} else {
 		if (scrollRemove) scrollRemove();
@@ -481,17 +467,44 @@ function toBottom() {
 	scrollToBottom(contentEl!);
 }
 
+let initialScrollCleaner: () => void | undefined;
+
+const createInitialScrollListener = () => {
+	if (!props.disableObserver || !contentEl) {
+		return;
+	}
+	initialScrollCleaner = (props.pagination.reversed ? onScrollUpOnce : onScrollDownOnce)(contentEl, () => {
+		backed = false;
+		const cleaner = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, () => {
+			backed = true;
+			nextTick(() => {
+				createInitialScrollListener();
+			});
+		}, TOLERANCE);
+		if (cleaner) initialScrollCleaner = cleaner;
+	});
+}
+
 onMounted(() => {
 	inited.then(() => {
 		if (props.pagination.reversed) {
 			nextTick(() => {
-				setTimeout(toBottom, 800);
+				setTimeout(() => {
+					toBottom();
+					setTimeout(() => {
+						createInitialScrollListener();
+					});
+				}, 800);
 
 				// scrollToBottomでmoreFetchingボタンが画面外まで出るまで
 				// more = trueを遅らせる
 				setTimeout(() => {
 					moreFetching.value = false;
 				}, 2000);
+			});
+		} else {
+			nextTick(() => {
+				createInitialScrollListener();
 			});
 		}
 	});
