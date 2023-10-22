@@ -107,7 +107,7 @@ const emit = defineEmits<{
 let rootEl = $shallowRef<HTMLElement>();
 
 // 遡り中かどうか
-let backed = $ref(false);
+let backed = $ref(true);
 
 let scrollRemove = $ref<(() => void) | null>(null);
 
@@ -167,6 +167,8 @@ const createScrollObserver = () => {
 		threshold: 0.01,
 	});
 };
+
+let initialScrollCleaner: () => void | undefined;
 
 watch([() => props.pagination.reversed, $$(scrollableElement)], () => {
 	if (props.disableObserver) {
@@ -466,8 +468,6 @@ onDeactivated(() => {
 function toBottom() {
 	scrollToBottom(contentEl!);
 }
-
-let initialScrollCleaner: () => void | undefined;
 
 const createInitialScrollListener = () => {
 	if (!props.disableObserver || !contentEl) {
