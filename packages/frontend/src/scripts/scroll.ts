@@ -135,9 +135,9 @@ export function getBodyScrollHeight() {
 
 export function onScrollDownOnce(el: HTMLElement, cb: () => unknown): () => void {
 	const containerEl = getScrollContainer(el);
-	const targetEl = document.body ?? window;
+	const targetEl = containerEl ?? window;
 
-	let initialScrollTop = (containerEl?.scrollTop || 0);
+	let initialScrollTop = containerEl?.scrollTop || 0;
 
 	const listener = () => {
 		if ((containerEl?.scrollTop || 0) > initialScrollTop) {
