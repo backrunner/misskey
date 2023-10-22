@@ -485,6 +485,12 @@ const createInitialScrollListener = () => {
 	});
 }
 
+watch($$(contentEl), () => {
+	if (props.disableObserver) {
+		createInitialScrollListener();
+	}
+});
+
 onMounted(() => {
 	inited.then(() => {
 		if (props.pagination.reversed) {
