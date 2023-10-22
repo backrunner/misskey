@@ -486,10 +486,8 @@ const createInitialScrollListener = () => {
 }
 
 watch($$(contentEl), () => {
-	if (!props.disableObserver) {
+	if (props.disableObserver) {
 		createInitialScrollListener();
-	} else {
-		initialScrollCleaner?.();
 	}
 });
 
