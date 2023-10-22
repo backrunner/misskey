@@ -478,13 +478,15 @@ const createInitialScrollListener = () => {
 	setTimeout(() => {
 		initialScrollCleaner = (props.pagination.reversed ? onScrollUpOnce : onScrollDownOnce)(contentEl, () => {
 			backed = false;
-			const cleaner = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, () => {
-				setTimeout(() => {
-					backed = true;
-					createInitialScrollListener();
-				});
-			}, props.tolerance, true, false);
-			if (cleaner) initialScrollCleaner = cleaner;
+			nextTick(() => {
+				const cleaner = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, () => {
+					setTimeout(() => {
+						backed = true;
+						createInitialScrollListener();
+					});
+				}, props.tolerance, true, false);
+				if (cleaner) initialScrollCleaner = cleaner;
+			});
 		});
 	});
 }
