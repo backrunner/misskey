@@ -146,7 +146,7 @@ export function onScrollDownOnce(el: HTMLElement, cb: () => unknown): () => void
 		initialScrollTop = containerEl.scrollTop;
 	};
 
-	containerEl.addEventListener('scroll', listener);
+	containerEl.addEventListener('scroll', listener, { passive: true });
 
 	return () => {
 		containerEl.removeEventListener('scroll', listener);
@@ -165,7 +165,7 @@ export function onScrollUpOnce(el: HTMLElement, cb: () => unknown): () => void {
 		}
 	};
 
-	containerEl.addEventListener('scroll', listener);
+	containerEl.addEventListener('scroll', listener, { passive: true });
 
 	return () => {
 		containerEl.removeEventListener('scroll', listener);
