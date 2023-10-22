@@ -109,8 +109,7 @@ definePageMetadata(computed(() => ({
 const formRef = ref<HTMLDivElement | undefined>();
 const formHeight = ref(0);
 const formTop = computed(
-	() => formHeight.value + (formRef.value?.getBoundingClientRect().y || 0) +
-		Number(window.getComputedStyle(document.documentElement).getPropertyValue('--margin') || 0)
+	() => formHeight.value + (formRef.value?.getBoundingClientRect().y || 0) + (parseInt(window.getComputedStyle(document.documentElement).getPropertyValue('--margin'), 10) || 0)
 );
 
 onMounted(() => {
