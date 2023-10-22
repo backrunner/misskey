@@ -106,10 +106,6 @@ definePageMetadata(computed(() => ({
 </script>
 
 <style lang="scss" module>
-.container {
-	overflow-y: auto;
-}
-
 .instances {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
