@@ -96,8 +96,10 @@ const props = withDefaults(defineProps<{
 	disableAutoLoad?: boolean;
 	displayLimit?: number;
 	disableObserver?: boolean;
+	tolerance?: number;
 }>(), {
 	displayLimit: 20,
+	tolerance: TOLERANCE,
 });
 
 const emit = defineEmits<{
@@ -188,7 +190,7 @@ watch($$(rootEl), () => {
 watch([$$(backed), $$(contentEl)], () => {
 	if (!backed) {
 		if (!contentEl) return;
-		scrollRemove = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, executeQueue, TOLERANCE);
+		scrollRemove = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, executeQueue, props.tolerance);
 	} else {
 		if (scrollRemove) scrollRemove();
 		scrollRemove = null;
@@ -473,15 +475,17 @@ const createInitialScrollListener = () => {
 	if (!props.disableObserver || !contentEl) {
 		return;
 	}
-	initialScrollCleaner = (props.pagination.reversed ? onScrollUpOnce : onScrollDownOnce)(contentEl, () => {
-		backed = false;
-		const cleaner = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, () => {
-			backed = true;
-			nextTick(() => {
-				createInitialScrollListener();
-			});
-		}, TOLERANCE);
-		if (cleaner) initialScrollCleaner = cleaner;
+	nextTick(() => {
+		initialScrollCleaner = (props.pagination.reversed ? onScrollUpOnce : onScrollDownOnce)(contentEl, () => {
+			backed = false;
+			const cleaner = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, () => {
+				backed = true;
+				nextTick(() => {
+					createInitialScrollListener();
+				});
+			}, props.tolerance);
+			if (cleaner) initialScrollCleaner = cleaner;
+		});
 	});
 }
 
