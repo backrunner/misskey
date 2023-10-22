@@ -9,7 +9,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<template #header><XHeader :actions="headerActions"/></template>
 		<MkSpacer :contentMax="900">
 			<div class="_gaps">
-				<div>
+				<div ref="form">
 					<MkInput v-model="host" :debounce="true" class="">
 						<template #prefix><i class="ti ti-search"></i></template>
 						<template #label>{{ i18n.ts.host }}</template>
@@ -42,8 +42,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</MkSelect>
 					</FormSplit>
 				</div>
-
-				<MkPagination v-slot="{items}" ref="instances" :key="host + state" :pagination="pagination">
+				<MkPagination v-slot="{items}" ref="instances" :key="host + state" :pagination="pagination" :rootPadding="formTop">
 					<div :class="$style.instances">
 						<MkA v-for="instance in items" :key="instance.id" v-tooltip.mfm="`Status: ${getStatus(instance)}`" :class="$style.instance" :to="`/instance-info/${instance.host}`">
 							<MkInstanceCardMini :instance="instance"/>
@@ -57,7 +56,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import XHeader from './_header_.vue';
 import MkInput from '@/components/MkInput.vue';
 import MkSelect from '@/components/MkSelect.vue';
@@ -66,10 +65,13 @@ import MkInstanceCardMini from '@/components/MkInstanceCardMini.vue';
 import FormSplit from '@/components/form/split.vue';
 import { i18n } from '@/i18n.js';
 import { definePageMetadata } from '@/scripts/page-metadata.js';
+import { syncRef } from '@/scripts/reactivity.js';
+import { useHeightObserver } from '@/scripts/resize.js';
 
 let host = $ref('');
 let state = $ref('federating');
 let sort = $ref('+pubSub');
+
 const pagination = {
 	endpoint: 'federation/instances' as const,
 	limit: 10,
@@ -103,6 +105,25 @@ definePageMetadata(computed(() => ({
 	title: i18n.ts.federation,
 	icon: 'ti ti-whirl',
 })));
+
+const formRef = ref<HTMLDivElement | undefined>();
+const formHeight = ref(0);
+const formTop = computed(() => formHeight.value + (formRef.value?.getBoundingClientRect().y || 0));
+
+onMounted(() => {
+	if (!formRef.value) {
+		return;
+	}
+
+	const [height, dispose] = useHeightObserver(formRef.value);
+
+	const cancelSync = syncRef(height, formHeight);
+
+	onBeforeUnmount(() => {
+		dispose();
+		cancelSync();
+	});
+});
 </script>
 
 <style lang="scss" module>
