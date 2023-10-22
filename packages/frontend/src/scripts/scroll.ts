@@ -132,3 +132,42 @@ export function getBodyScrollHeight() {
 		document.body.clientHeight, document.documentElement.clientHeight,
 	);
 }
+
+export function onScrollDownOnce(el: HTMLElement, cb: () => unknown): () => void {
+	const containerEl = getScrollContainer(el) ?? document.body;
+
+	let initialScrollTop = containerEl.scrollTop;
+
+	const listener = () => {
+		if (containerEl.scrollTop > initialScrollTop) {
+			cb();
+			containerEl.removeEventListener('scroll', listener);
+		}
+		initialScrollTop = containerEl.scrollTop;
+	};
+
+	containerEl.addEventListener('scroll', listener);
+
+	return () => {
+		containerEl.removeEventListener('scroll', listener);
+	};
+}
+
+export function onScrollUpOnce(el: HTMLElement, cb: () => unknown): () => void {
+	const containerEl = getScrollContainer(el) ?? document.body;
+
+	let initialScrollTop = containerEl.scrollTop;
+
+	const listener = () => {
+		if (containerEl.scrollTop < initialScrollTop) {
+			cb();
+			containerEl.removeEventListener('scroll', listener);
+		}
+	};
+
+	containerEl.addEventListener('scroll', listener);
+
+	return () => {
+		containerEl.removeEventListener('scroll', listener);
+	};
+}
