@@ -158,7 +158,7 @@ let scrollObserver = $ref<IntersectionObserver | null>(null);
 const getObserverRootMargin = () => {
 	let rootMargin: string = '';
 	if (props.rootPadding) {
-		rootMargin = props.pagination.reversed ? `calc(-100% + ${props.rootPadding}px) 0px calc(100% - ${props.rootPadding}px) 0px` : `calc(100% - ${props.rootPadding}px) 0px -100% + calc(100% + ${props.rootPadding}px) 0px`;
+		rootMargin = props.pagination.reversed ? `calc(-100% + ${props.rootPadding}px) 0px calc(100% - ${props.rootPadding}px) 0px` : `calc(100% - ${props.rootPadding}px) 0px calc(-100% + ${props.rootPadding}px) 0px`;
 	} else {
 		rootMargin = props.pagination.reversed ? '-100% 0px 100% 0px' : '100% 0px -100% 0px';
 	}
