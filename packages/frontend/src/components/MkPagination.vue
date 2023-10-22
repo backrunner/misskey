@@ -95,8 +95,10 @@ const props = withDefaults(defineProps<{
 	pagination: Paging;
 	disableAutoLoad?: boolean;
 	displayLimit?: number;
+	rootPadding?: number;
 }>(), {
 	displayLimit: 20,
+	rootPadding: 0,
 });
 
 const emit = defineEmits<{
@@ -153,7 +155,17 @@ const BACKGROUND_PAUSE_WAIT_SEC = 10;
 // https://qiita.com/mkataigi/items/0154aefd2223ce23398e
 let scrollObserver = $ref<IntersectionObserver | null>(null);
 
-watch([() => props.pagination.reversed, $$(scrollableElement)], () => {
+const getObserverRootMargin = () => {
+	let rootMargin: string = '';
+	if (props.rootPadding) {
+		rootMargin = props.pagination.reversed ? `calc(-100% + ${props.rootPadding}px) 0px calc(100% - ${props.rootPadding}px) 0px` : `calc(100% - ${props.rootPadding}px) 0px -100% + calc(100% + ${props.rootPadding}px) 0px`;
+	} else {
+		rootMargin = props.pagination.reversed ? '-100% 0px 100% 0px' : '100% 0px -100% 0px';
+	}
+	return rootMargin;
+}
+
+const createScrollObserver = () => {
 	if (scrollObserver) {
 		scrollObserver.disconnect();
 		scrollObserver = null;
@@ -163,10 +175,19 @@ watch([() => props.pagination.reversed, $$(scrollableElement)], () => {
 		backed = entries[0].isIntersecting;
 	}, {
 		root: scrollableElement,
-		rootMargin: props.pagination.reversed ? '-100% 0px 100% 0px' : '100% 0px -100% 0px',
+		rootMargin: getObserverRootMargin(),
 		threshold: 0.01,
 	});
-}, { immediate: true });
+};
+
+watch([() => props.pagination.reversed, $$(scrollableElement)], createScrollObserver, { immediate: true });
+
+watch(() => props.rootPadding, () => {
+	if (!scrollObserver) {
+		return;
+	}
+	createScrollObserver();
+});
 
 watch($$(rootEl), () => {
 	scrollObserver?.disconnect();
