@@ -81,8 +81,8 @@ export class DriveFileEntityService {
 			`${this.config.mediaProxy}/${mode ?? 'image'}.webp`,
 			query({
 				url,
-				sign: getProxySign(url, this.config.mediaProxyKey, this.config.url),
 				...(mode ? { [mode]: '1' } : {}),
+				...(this.config.mediaProxyKey ? { sign: getProxySign(url, this.config.mediaProxyKey, this.config.url) } : {}),
 			}),
 		);
 	}

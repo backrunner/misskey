@@ -38,8 +38,8 @@ export class UrlPreviewService {
 			? url.match(/^https?:\/\//)
 				? `${this.config.mediaProxy}/preview.webp?${query({
 					url,
-					sign: getProxySign(url, this.config.mediaProxyKey, this.config.url),
 					preview: '1',
+					...(this.config.mediaProxyKey ? { sign: getProxySign(url, this.config.mediaProxyKey, this.config.url) } : {}),
 				})}`
 				: url
 			: null;

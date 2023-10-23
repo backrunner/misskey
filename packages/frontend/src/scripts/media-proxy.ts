@@ -23,10 +23,10 @@ export function getProxiedImageUrl(imageUrl: string, type?: 'preview' | 'emoji' 
 		: 'image.webp'
 	}?${query({
 		url: imageUrl,
-		sign: getProxySign(imageUrl, instance.mediaProxyKey),
 		...(!noFallback ? { 'fallback': '1' } : {}),
 		...(type ? { [type]: '1' } : {}),
 		...(mustOrigin ? { origin: '1' } : {}),
+		...(instance.mediaProxyKey ? { sign: getProxySign(imageUrl, instance.mediaProxyKey) } : {}),
 	})}`;
 }
 
@@ -52,7 +52,7 @@ export function getStaticImageUrl(baseUrl: string): string {
 
 	return `${instance.mediaProxy}/static.webp?${query({
 		url: u.href,
-		sign: getProxySign(u.href, instance.mediaProxyKey),
 		static: '1',
+		...(instance.mediaProxyKey ? { sign: getProxySign(u.href, instance.mediaProxyKey) } : {}),
 	})}`;
 }

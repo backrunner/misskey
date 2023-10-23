@@ -138,16 +138,16 @@ export class ServerService implements OnApplicationShutdown {
 				// || emoji.originalUrl してるのは後方互換性のため（publicUrlはstringなので??はだめ）
 				const targetUrl = emoji.publicUrl || emoji.originalUrl;
 				url.searchParams.set('url', targetUrl);
-				url.searchParams.set('sign', getProxySign(targetUrl, this.config.mediaProxyKey, this.config.url));
 				url.searchParams.set('badge', '1');
+				if (this.config.mediaProxyKey) url.searchParams.set('sign', getProxySign(targetUrl, this.config.mediaProxyKey, this.config.url));
 			} else {
 				url = new URL(`${this.config.mediaProxy}/emoji.webp`);
 				// || emoji.originalUrl してるのは後方互換性のため（publicUrlはstringなので??はだめ）
 				const targetUrl = emoji.publicUrl || emoji.originalUrl;
 				url.searchParams.set('url', targetUrl);
-				url.searchParams.set('sign', getProxySign(targetUrl, this.config.mediaProxyKey, this.config.url));
 				url.searchParams.set('emoji', '1');
 				if ('static' in request.query) url.searchParams.set('static', '1');
+				if (this.config.mediaProxyKey) url.searchParams.set('sign', getProxySign(targetUrl, this.config.mediaProxyKey, this.config.url));
 			}
 
 			return await reply.redirect(
