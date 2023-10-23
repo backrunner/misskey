@@ -22,8 +22,9 @@ import { LoggerService } from '@/core/LoggerService.js';
 import { bindThis } from '@/decorators.js';
 import { isMimeImage } from '@/misc/is-mime-image.js';
 import { correctFilename } from '@/misc/correct-filename.js';
-import type { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginOptions } from 'fastify';
 import { getProxySign } from '@/misc/media-proxy.js';
+
+import type { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginOptions } from 'fastify';
 
 const _filename = fileURLToPath(import.meta.url);
 const _dirname = dirname(_filename);
@@ -133,8 +134,11 @@ export class FileServerService {
 
 						const url = new URL(`${this.config.mediaProxy}/static.webp`);
 						url.searchParams.set('url', file.url);
-						url.searchParams.set('sign', getProxySign(file.url, this.config.mediaProxyKey, this.config.url));
 						url.searchParams.set('static', '1');
+
+						if (this.config.mediaProxyKey) {
+							url.searchParams.set('sign', getProxySign(file.url, this.config.mediaProxyKey, this.config.url));
+						}
 
 						file.cleanup();
 						return await reply.redirect(301, url.toString());
@@ -155,7 +159,10 @@ export class FileServerService {
 
 						const url = new URL(`${this.config.mediaProxy}/svg.webp`);
 						url.searchParams.set('url', file.url);
-						url.searchParams.set('sign', getProxySign(file.url, this.config.mediaProxyKey, this.config.url));
+
+						if (this.config.mediaProxyKey) {
+							url.searchParams.set('sign', getProxySign(file.url, this.config.mediaProxyKey, this.config.url));
+						}
 
 						file.cleanup();
 						return await reply.redirect(301, url.toString());
@@ -234,7 +241,9 @@ export class FileServerService {
 				url.searchParams.append(key, value);
 			}
 
-			url.searchParams.set('sign', getProxySign(request.params.url, this.config.mediaProxyKey, this.config.url));
+			if (this.config.mediaProxyKey) {
+				url.searchParams.set('sign', getProxySign(request.params.url, this.config.mediaProxyKey, this.config.url));
+			}
 
 			return await reply.redirect(
 				301,
