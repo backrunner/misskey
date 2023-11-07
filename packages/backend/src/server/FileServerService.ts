@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+import { promises } from 'node:dns';
 import * as fs from 'node:fs';
+import net from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import { Inject, Injectable } from '@nestjs/common';
@@ -230,6 +232,37 @@ export class FileServerService {
 		if (typeof url !== 'string') {
 			reply.code(400);
 			return;
+		}
+
+		// if the proxy request is a potential SSRF attack, reject it
+		try {
+			const { hostname } = new URL(url);
+			const resolvedIps = await promises.resolve(hostname);
+
+			const isSSRF = resolvedIps.some((ip) => {
+				if (net.isIPv4(ip)) {
+					const parts = ip.split('.').map(Number);
+					return (
+						parts[0] === 10 ||
+						(parts[0] === 172 && parts[1] >= 16 && parts[1] < 32) ||
+						(parts[0] === 192 && parts[1] === 168) ||
+						parts[0] === 127 ||
+						parts[0] === 0
+					);
+				} else if (net.isIPv6(ip)) {
+					return (
+						ip.startsWith('::') || ip.startsWith('fc00:') || ip.startsWith('fe80:')
+					);
+				}
+				return false;
+			});
+
+			if (isSSRF) {
+				reply.code(400);
+				return;
+			}
+		} catch (error) {
+			this.logger.warn('Failed to resolve proxy host in internal handler.', { error });
 		}
 
 		// アバタークロップなど、どうしてもオリジンである必要がある場合
