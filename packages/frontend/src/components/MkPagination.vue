@@ -43,12 +43,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts">
-import { computed, ComputedRef, isRef, nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from 'vue';
+import { computed, ComputedRef, isRef, nextTick, onActivated, onBeforeMount, onBeforeUnmount, onDeactivated, ref, watch } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
-import { onScrollTop, isTopVisible, getBodyScrollHeight, getScrollContainer, onScrollBottom, scrollToBottom, scroll, isBottomVisible, onScrollDownOnce, onScrollUpOnce } from '@/scripts/scroll.js';
+import { onScrollTop, isTopVisible, getBodyScrollHeight, getScrollContainer, onScrollBottom, scrollToBottom, scroll, isBottomVisible } from '@/scripts/scroll.js';
 import { useDocumentVisibility } from '@/scripts/use-document-visibility.js';
-import MkButton from '@/components/MkButton.vue';
 import { defaultStore } from '@/store.js';
 import { MisskeyEntity } from '@/types/date-separated-list';
 import { i18n } from '@/i18n.js';
@@ -91,16 +90,14 @@ function concatMapWithArray(map: MisskeyEntityMap, entities: MisskeyEntity[]): M
 </script>
 <script lang="ts" setup>
 import { infoImageUrl } from '@/instance.js';
+import MkButton from '@/components/MkButton.vue';
 
 const props = withDefaults(defineProps<{
 	pagination: Paging;
 	disableAutoLoad?: boolean;
 	displayLimit?: number;
-	disableObserver?: boolean;
-	tolerance?: number;
 }>(), {
 	displayLimit: 20,
-	tolerance: TOLERANCE,
 });
 
 const emit = defineEmits<{
@@ -111,7 +108,7 @@ const emit = defineEmits<{
 let rootEl = $shallowRef<HTMLElement>();
 
 // 遡り中かどうか
-let backed = $ref(true);
+let backed = $ref(false);
 
 let scrollRemove = $ref<(() => void) | null>(null);
 
@@ -156,13 +153,11 @@ const BACKGROUND_PAUSE_WAIT_SEC = 10;
 
 // 先頭が表示されているかどうかを検出
 // https://qiita.com/mkataigi/items/0154aefd2223ce23398e
-let scrollObserver = $ref<IntersectionObserver | null>(null);
+let scrollObserver = $ref<IntersectionObserver>();
 
-const createScrollObserver = () => {
-	if (scrollObserver) {
-		scrollObserver.disconnect();
-		scrollObserver = null;
-	}
+watch([() => props.pagination.reversed, $$(scrollableElement)], () => {
+	if (scrollObserver) scrollObserver.disconnect();
+
 	scrollObserver = new IntersectionObserver(entries => {
 		backed = entries[0].isIntersecting;
 	}, {
@@ -170,16 +165,6 @@ const createScrollObserver = () => {
 		rootMargin: props.pagination.reversed ? '-100% 0px 100% 0px' : '100% 0px -100% 0px',
 		threshold: 0.01,
 	});
-};
-
-let initialScrollCleaner: () => void | undefined;
-
-watch([() => props.pagination.reversed, $$(scrollableElement)], () => {
-	if (props.disableObserver) {
-		initialScrollCleaner?.();
-	} else {
-		createScrollObserver();
-	}
 }, { immediate: true });
 
 watch($$(rootEl), () => {
@@ -192,16 +177,16 @@ watch($$(rootEl), () => {
 watch([$$(backed), $$(contentEl)], () => {
 	if (!backed) {
 		if (!contentEl) return;
-		scrollRemove = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, executeQueue, props.tolerance, false, !props.disableObserver);
+
+		scrollRemove = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, executeQueue, TOLERANCE);
 	} else {
 		if (scrollRemove) scrollRemove();
 		scrollRemove = null;
 	}
 });
 
-if (props.pagination.params && isRef(props.pagination.params)) {
-	watch(props.pagination.params, init, { deep: true });
-}
+// パラメータに何らかの変更があった際、再読込したい（チャンネル等のIDが変わったなど）
+watch(() => props.pagination.params, init, { deep: true });
 
 watch(queue, (a, b) => {
 	if (a.size === 0 && b.size === 0) return;
@@ -222,15 +207,9 @@ async function init(): Promise<void> {
 		...params,
 		limit: props.pagination.limit ?? 10,
 	}).then(res => {
-		for (let i = 0; i < res.length; i += 3) {
+		for (let i = 0; i < res.length; i++) {
 			const item = res[i];
-			if (!item) {
-				continue;
-			}
-			if (i === 3) {
-				item._shouldInsertAd_ = true;
-				break;
-			}
+			if (i === 3) item._shouldInsertAd_ = true;
 		}
 
 		if (res.length === 0 || props.pagination.noPaging) {
@@ -268,9 +247,9 @@ const fetchMore = async (): Promise<void> => {
 			untilId: Array.from(items.value.keys()).at(-1),
 		}),
 	}).then(res => {
-		for (let i = 0; i < res.length; i += 10) {
-			if (!res[i]) continue;
-			res[i]._shouldInsertAd_ = true;
+		for (let i = 0; i < res.length; i++) {
+			const item = res[i];
+			if (i === 10) item._shouldInsertAd_ = true;
 		}
 
 		const reverseConcat = _res => {
@@ -415,11 +394,9 @@ const prepend = (item: MisskeyEntity): void => {
  */
 function unshiftItems(newItems: MisskeyEntity[]) {
 	const length = newItems.length + items.value.size;
-	const mapEntries = [...arrayToEntries(newItems), ...items.value].slice(0, props.displayLimit);
-	items.value = new Map(mapEntries);
+	items.value = new Map([...arrayToEntries(newItems), ...items.value].slice(0, props.displayLimit));
 
 	if (length >= props.displayLimit) more.value = true;
-	offset.value = mapEntries.length;
 }
 
 /**
@@ -428,11 +405,9 @@ function unshiftItems(newItems: MisskeyEntity[]) {
  */
 function concatItems(oldItems: MisskeyEntity[]) {
 	const length = oldItems.length + items.value.size;
-	const mapEntries = [...items.value, ...arrayToEntries(oldItems)].slice(0, props.displayLimit);
-	items.value = new Map(mapEntries);
+	items.value = new Map([...items.value, ...arrayToEntries(oldItems)].slice(0, props.displayLimit));
 
 	if (length >= props.displayLimit) more.value = true;
-	offset.value = mapEntries.length;
 }
 
 function executeQueue() {
@@ -464,8 +439,6 @@ const updateItem = (id: MisskeyEntity['id'], replacer: (old: MisskeyEntity) => M
 	if (queueItem) queue.value.set(id, replacer(queueItem));
 };
 
-const inited = init();
-
 onActivated(() => {
 	isBackTop.value = false;
 });
@@ -478,52 +451,17 @@ function toBottom() {
 	scrollToBottom(contentEl!);
 }
 
-const createInitialScrollListener = () => {
-	if (!props.disableObserver || !contentEl) {
-		return;
-	}
-	setTimeout(() => {
-		initialScrollCleaner = (props.pagination.reversed ? onScrollUpOnce : onScrollDownOnce)(contentEl, () => {
-			backed = false;
-			nextTick(() => {
-				const cleaner = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl, () => {
-					setTimeout(() => {
-						backed = true;
-						createInitialScrollListener();
-					});
-				}, props.tolerance, true, false);
-				if (cleaner) initialScrollCleaner = cleaner;
-			});
-		});
-	});
-}
-
-watch($$(contentEl), () => {
-	if (props.disableObserver) {
-		createInitialScrollListener();
-	}
-});
-
-onMounted(() => {
-	inited.then(() => {
+onBeforeMount(() => {
+	init().then(() => {
 		if (props.pagination.reversed) {
 			nextTick(() => {
-				setTimeout(() => {
-					toBottom();
-					setTimeout(() => {
-						createInitialScrollListener();
-					});
-				}, 800);
+				setTimeout(toBottom, 800);
 
 				// scrollToBottomでmoreFetchingボタンが画面外まで出るまで
 				// more = trueを遅らせる
 				setTimeout(() => {
 					moreFetching.value = false;
 				}, 2000);
-			});
-		} else {
-			nextTick(() => {
-				createInitialScrollListener();
 			});
 		}
 	});
@@ -546,7 +484,6 @@ defineExpose({
 	queue,
 	backed,
 	more,
-	inited,
 	reload,
 	prepend,
 	append: appendItem,
