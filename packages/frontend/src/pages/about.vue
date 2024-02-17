@@ -119,9 +119,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkSpacer v-else-if="tab === 'emojis'" :contentMax="1000" :marginMin="20">
 			<XEmojis/>
 		</MkSpacer>
-		<MkSpacer v-else-if="tab === 'federation'" :contentMax="1000" :marginMin="20">
-			<XFederation/>
-		</MkSpacer>
 		<MkSpacer v-else-if="tab === 'charts'" :contentMax="1000" :marginMin="20">
 			<MkInstanceStats/>
 		</MkSpacer>
@@ -133,7 +130,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { computed, watch, ref } from 'vue';
 import * as Misskey from 'misskey-js';
 import XEmojis from './about.emojis.vue';
-import XFederation from './about.federation.vue';
 import { version, host } from '@/config.js';
 import FormLink from '@/components/form/link.vue';
 import FormSection from '@/components/form/section.vue';
