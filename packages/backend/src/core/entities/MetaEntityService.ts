@@ -111,6 +111,7 @@ export class MetaEntityService {
 			policies: { ...DEFAULT_POLICIES, ...instance.policies },
 
 			mediaProxy: this.config.mediaProxy,
+			mediaProxyKey: this.config.mediaProxyKey,
 		};
 
 		return packed;

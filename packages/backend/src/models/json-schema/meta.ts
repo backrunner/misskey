@@ -207,6 +207,10 @@ export const packedMetaLiteSchema = {
 			type: 'string',
 			optional: false, nullable: false,
 		},
+		mediaProxyKey: {
+			type: 'string',
+			optional: false, nullable: false,
+		},
 		backgroundImageUrl: {
 			type: 'string',
 			optional: false, nullable: true,
