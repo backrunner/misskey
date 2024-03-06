@@ -1,4 +1,3 @@
-<!-- eslint-disable @typescript-eslint/no-non-null-assertion -->
 <!--
 SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
