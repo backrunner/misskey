@@ -32,6 +32,7 @@ type Tsx<T extends ILocale> = {
 
 export class I18n<T extends ILocale> {
 	private tsxCache?: Tsx<T>;
+	private tsCache?: T;
 
 	constructor(public locale: T) {
 		//#region BIND
@@ -40,121 +41,49 @@ export class I18n<T extends ILocale> {
 	}
 
 	public get ts(): T {
-		if (_DEV_) {
-			class Handler<TTarget extends ILocale> implements ProxyHandler<TTarget> {
-				get(target: TTarget, p: string | symbol): unknown {
-					const value = target[p as keyof TTarget];
+		if (this.tsCache) return this.tsCache;
+		
+		class Handler<TTarget extends ILocale> implements ProxyHandler<TTarget> {
+			get(target: TTarget, p: string | symbol): unknown {
+				const value = target[p as keyof TTarget];
 
-					if (typeof value === 'object') {
-						return new Proxy(value, new Handler<TTarget[keyof TTarget] & ILocale>());
-					}
+				if (value && typeof value === 'object') {
+					return new Proxy(value, new Handler<TTarget[keyof TTarget] & ILocale>());
+				}
 
-					if (typeof value === 'string') {
+				if (typeof value === 'string') {
+					if (_DEV_) {
 						const parameters = Array.from(value.matchAll(/\{(\w+)\}/g), ([, parameter]) => parameter);
-
-						if (parameters.length) {
+						if (!parameters.length) {
 							console.error(`Missing locale parameters: ${parameters.join(', ')} at ${String(p)}`);
 						}
-
-						return value;
 					}
-
-					console.error(`Unexpected locale key: ${String(p)}`);
-
-					return p;
+					return value;
 				}
-			}
 
-			return new Proxy(this.locale, new Handler());
+				console.error(`Unexpected locale key: ${String(p)}`);
+
+				return p;
+			}
 		}
 
-		return this.locale;
+		return this.tsCache = new Proxy(this.locale, new Handler());
 	}
 
 	public get tsx(): Tsx<T> {
-		if (_DEV_) {
-			if (this.tsxCache) {
-				return this.tsxCache;
-			}
-
-			class Handler<TTarget extends ILocale> implements ProxyHandler<TTarget> {
-				get(target: TTarget, p: string | symbol): unknown {
-					const value = target[p as keyof TTarget];
-
-					if (typeof value === 'object') {
-						return new Proxy(value, new Handler<TTarget[keyof TTarget] & ILocale>());
-					}
-
-					if (typeof value === 'string') {
-						const quasis: string[] = [];
-						const expressions: string[] = [];
-						let cursor = 0;
-
-						while (~cursor) {
-							const start = value.indexOf('{', cursor);
-
-							if (!~start) {
-								quasis.push(value.slice(cursor));
-								break;
-							}
-
-							quasis.push(value.slice(cursor, start));
-
-							const end = value.indexOf('}', start);
-
-							expressions.push(value.slice(start + 1, end));
-
-							cursor = end + 1;
-						}
-
-						if (!expressions.length) {
-							console.error(`Unexpected locale key: ${String(p)}`);
-
-							return () => value;
-						}
-
-						return (arg) => {
-							let str = quasis[0];
-
-							for (let i = 0; i < expressions.length; i++) {
-								if (!Object.hasOwn(arg, expressions[i])) {
-									console.error(`Missing locale parameters: ${expressions[i]} at ${String(p)}`);
-								}
-
-								str += arg[expressions[i]] + quasis[i + 1];
-							}
-
-							return str;
-						};
-					}
-
-					console.error(`Unexpected locale key: ${String(p)}`);
-
-					return p;
-				}
-			}
-
-			return this.tsxCache = new Proxy(this.locale, new Handler()) as unknown as Tsx<T>;
-		}
-
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 		if (this.tsxCache) {
 			return this.tsxCache;
 		}
 
-		function build(target: ILocale): Tsx<T> {
-			const result = {} as Tsx<T>;
+		class Handler<TTarget extends ILocale> implements ProxyHandler<TTarget> {
+			get(target: TTarget, p: string | symbol): unknown {
+				const value = target[p as keyof TTarget];
 
-			for (const k in target) {
-				if (!Object.hasOwn(target, k)) {
-					continue;
+				if (value && typeof value === 'object') {
+					return new Proxy(value, new Handler<TTarget[keyof TTarget] & ILocale>());
 				}
 
-				const value = target[k as keyof typeof target];
-
-				if (typeof value === 'object') {
-					result[k] = build(value as ILocale);
-				} else if (typeof value === 'string') {
+				if (typeof value === 'string') {
 					const quasis: string[] = [];
 					const expressions: string[] = [];
 					let cursor = 0;
@@ -177,24 +106,32 @@ export class I18n<T extends ILocale> {
 					}
 
 					if (!expressions.length) {
-						continue;
+						console.error(`Unexpected locale key: ${String(p)}`);
+						return () => value;
 					}
 
-					result[k] = (arg) => {
+					return (arg) => {
 						let str = quasis[0];
 
 						for (let i = 0; i < expressions.length; i++) {
+							if (!Object.hasOwn(arg, expressions[i])) {
+								console.error(`Missing locale parameters: ${expressions[i]} at ${String(p)}`);
+							}
+
 							str += arg[expressions[i]] + quasis[i + 1];
 						}
 
 						return str;
 					};
 				}
+
+				console.error(`Unexpected locale key: ${String(p)}`);
+
+				return p;
 			}
-			return result;
 		}
 
-		return this.tsxCache = build(this.locale);
+		return this.tsxCache = new Proxy(this.locale, new Handler()) as unknown as Tsx<T>;
 	}
 
 	/**
