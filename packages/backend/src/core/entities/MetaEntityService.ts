@@ -112,6 +112,8 @@ export class MetaEntityService {
 
 			mediaProxy: this.config.mediaProxy,
 			mediaProxyKey: this.config.mediaProxyKey,
+			
+			enableUrlPreview: instance.urlPreviewEnabled,
 		};
 
 		return packed;

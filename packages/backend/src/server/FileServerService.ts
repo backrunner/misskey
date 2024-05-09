@@ -206,6 +206,7 @@ export class FileServerService {
 						reply.header('Content-Range', `bytes ${start}-${end}/${file.file.size}`);
 						reply.header('Accept-Ranges', 'bytes');
 						reply.header('Content-Length', chunksize);
+						reply.code(206);
 					} else {
 						image = {
 							data: fs.createReadStream(file.path),
@@ -225,6 +226,8 @@ export class FileServerService {
 				}
 
 				reply.header('Content-Type', FILE_TYPE_BROWSERSAFE.includes(image.type) ? image.type : 'application/octet-stream');
+				reply.header('Content-Length', file.file.size);
+				reply.header('Cache-Control', 'max-age=31536000, immutable');
 				reply.header('Content-Disposition',
 					contentDisposition(
 						'inline',
@@ -267,6 +270,7 @@ export class FileServerService {
 				return fs.createReadStream(file.path);
 			} else {
 				reply.header('Content-Type', FILE_TYPE_BROWSERSAFE.includes(file.file.type) ? file.file.type : 'application/octet-stream');
+				reply.header('Content-Length', file.file.size);
 				reply.header('Cache-Control', 'max-age=31536000, immutable');
 				reply.header('Content-Disposition', contentDisposition('inline', file.filename));
 
@@ -275,7 +279,6 @@ export class FileServerService {
 					const parts = range.replace(/bytes=/, '').split('-');
 					const start = parseInt(parts[0], 10);
 					let end = parts[1] ? parseInt(parts[1], 10) : file.file.size - 1;
-					console.log(end);
 					if (end > file.file.size) {
 						end = file.file.size - 1;
 					}
@@ -490,6 +493,7 @@ export class FileServerService {
 					reply.header('Content-Range', `bytes ${start}-${end}/${file.file.size}`);
 					reply.header('Accept-Ranges', 'bytes');
 					reply.header('Content-Length', chunksize);
+					reply.code(206);
 				} else {
 					image = {
 						data: fs.createReadStream(file.path),
@@ -586,6 +590,7 @@ export class FileServerService {
 		if (!file.storedInternal) {
 			if (!(file.isLink && file.uri)) return '204';
 			const result = await this.downloadAndDetectTypeFromUrl(file.uri);
+			file.size = (await fs.promises.stat(result.path)).size;	// DB file.sizeは正確とは限らないので
 			return {
 				...result,
 				url: file.uri,
