@@ -414,45 +414,6 @@ export class UserEntityService implements OnModuleInit {
 		const user = typeof src === 'object' ? src : await this.usersRepository.findOneByOrFail({ id: src });
 
 		const isDetailed = opts.schema !== 'UserLite';
-		// migration
-		if (user.avatarId && user.avatarUrl === null) {
-			const avatar = await this.driveFilesRepository.findOneByOrFail({ id: user.avatarId });
-			user.avatarUrl = this.driveFileEntityService.getPublicUrl(avatar, 'avatar');
-			this.usersRepository.update(user.id, {
-				avatarUrl: user.avatarUrl,
-				avatarBlurhash: avatar.blurhash,
-			});
-		}
-		if (user.avatarId && user.avatarUrl && this.config.mediaProxyKey) {
-			// append sign to existed data
-			if (!user.avatarUrl.includes('sign=')) {
-				const avatar = await this.driveFilesRepository.findOneByOrFail({ id: user.avatarId });
-				const avatarUrl = this.driveFileEntityService.getPublicUrl(avatar, 'avatar');
-				user.avatarUrl = avatarUrl;
-				this.usersRepository.update(user.id, {
-					avatarUrl,
-				});
-			}
-		}
-		if (user.bannerId != null && user.bannerUrl === null) {
-			const banner = await this.driveFilesRepository.findOneByOrFail({ id: user.bannerId });
-			user.bannerUrl = this.driveFileEntityService.getPublicUrl(banner);
-			this.usersRepository.update(user.id, {
-				bannerUrl: user.bannerUrl,
-				bannerBlurhash: banner.blurhash,
-			});
-		}
-		if (user.bannerId && user.bannerUrl && this.config.mediaProxyKey) {
-			// append sign to existed data
-			if (!user.bannerUrl.includes('sign=')) {
-				const banner = await this.driveFilesRepository.findOneByOrFail({ id: user.bannerId });
-				const bannerUrl = this.driveFileEntityService.getPublicUrl(banner);
-				user.bannerUrl = bannerUrl;
-				this.usersRepository.update(user.id, {
-					bannerUrl,
-				});
-			}
-		}
 
 		const meId = me ? me.id : null;
 		const isMe = meId === user.id;
