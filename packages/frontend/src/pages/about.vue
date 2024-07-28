@@ -5,7 +5,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <MkStickyContainer>
-	<template #header><MkPageHeader v-model:tab="tab" :actions="headerActions" :tabs="headerTabs"/></template>
 	<MkHorizontalSwipe v-model:tab="tab" :tabs="headerTabs">
 		<MkSpacer v-if="tab === 'overview'" :contentMax="600" :marginMin="20">
 			<XOverview/>
@@ -29,7 +28,6 @@ import MkHorizontalSwipe from '@/components/MkHorizontalSwipe.vue';
 
 const XOverview = defineAsyncComponent(() => import('@/pages/about.overview.vue'));
 const XEmojis = defineAsyncComponent(() => import('@/pages/about.emojis.vue'));
-const XFederation = defineAsyncComponent(() => import('@/pages/about.federation.vue'));
 const MkInstanceStats = defineAsyncComponent(() => import('@/components/MkInstanceStats.vue'));
 
 const props = withDefaults(defineProps<{
@@ -55,10 +53,6 @@ const headerTabs = computed(() => [{
 	key: 'emojis',
 	title: i18n.ts.customEmojis,
 	icon: 'ti ti-icons',
-}, {
-	key: 'federation',
-	title: i18n.ts.federation,
-	icon: 'ti ti-whirl',
 }, {
 	key: 'charts',
 	title: i18n.ts.charts,
