@@ -30,7 +30,7 @@ export function openInstanceMenu(ev: MouseEvent) {
 		to: '/invite',
 		text: i18n.ts.invite,
 		icon: 'ti ti-user-plus',
-	} : undefined, { type: 'divider' }, {
+	} : undefined, {
 		type: 'link',
 		text: i18n.ts.inquiry,
 		icon: 'ti ti-help-circle',
