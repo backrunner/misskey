@@ -60,6 +60,9 @@ import { UserBlockingService } from '@/core/UserBlockingService.js';
 import { isReply } from '@/misc/is-reply.js';
 import { trackPromise } from '@/misc/promise-tracker.js';
 import { IdentifiableError } from '@/misc/identifiable-error.js';
+import { cleanLink } from '@/misc/link-cleaner.js';
+
+const FAST_URL_TESTER = new RE2('https?:\\/\\/');
 
 type NotificationType = 'reply' | 'renote' | 'quote' | 'mention';
 
@@ -338,6 +341,10 @@ export class NoteCreateService implements OnApplicationShutdown {
 			data.text = data.text.trim();
 			if (data.text === '') {
 				data.text = null;
+			} else {
+				if (FAST_URL_TESTER.test(data.text)) {
+					data.text = await cleanLink(data.text);
+				}
 			}
 		} else {
 			data.text = null;
