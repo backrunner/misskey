@@ -130,6 +130,7 @@ export class MetaEntityService {
 			mediaProxyKey: this.config.mediaProxyKey,
 			
 			enableUrlPreview: instance.urlPreviewEnabled,
+			noteSearchableScope: (this.config.meilisearch == null || this.config.meilisearch.scope !== 'local') ? 'global' : 'local',
 		};
 
 		return packed;
