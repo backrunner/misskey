@@ -16,8 +16,8 @@ import { LoggerService } from '@/core/LoggerService.js';
 import { bindThis } from '@/decorators.js';
 import { ApiError } from '@/server/api/error.js';
 import { MiMeta } from '@/models/Meta.js';
-import type { FastifyRequest, FastifyReply } from 'fastify';
 import { getProxySign } from '@/misc/media-proxy.js';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
 @Injectable()
 export class UrlPreviewService {
@@ -104,7 +104,7 @@ export class UrlPreviewService {
 
 			return summary;
 		} catch (err) {
-			this.logger.warn(`Failed to get preview of ${url}: ${err}`);
+			this.logger.error(`Failed to get preview of ${url}: ${err}`);
 
 			reply.code(422);
 			reply.header('Cache-Control', 'max-age=86400, immutable');
