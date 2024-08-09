@@ -52,10 +52,15 @@ export class UrlPreviewService {
 		request: FastifyRequest<{ Querystring: { url: string; lang?: string; } }>,
 		reply: FastifyReply,
 	): Promise<object | undefined> {
-		const url = request.query.url;
+		let url = request.query.url;
+
 		if (typeof url !== 'string') {
 			reply.code(400);
 			return;
+		}
+
+		if (/^https?%3A%2F%2F/.test(url)) {
+			url = decodeURIComponent(url);
 		}
 
 		const lang = request.query.lang;
