@@ -58,27 +58,27 @@ const TOLERANCE = 16;
 const APPEAR_MINIMUM_INTERVAL = 600;
 
 export type Paging<E extends keyof Misskey.Endpoints = keyof Misskey.Endpoints> = {
-	endpoint: E;
-	limit: number;
-	params?: Misskey.Endpoints[E]['req'] | ComputedRef<Misskey.Endpoints[E]['req']>;
+		endpoint: E;
+		limit: number;
+		params?: Misskey.Endpoints[E]['req'] | ComputedRef<Misskey.Endpoints[E]['req']>;
 
-	/**
-	 * 検索APIのような、ページング不可なエンドポイントを利用する場合
-	 * (そのようなAPIをこの関数で使うのは若干矛盾してるけど)
-	 */
-	noPaging?: boolean;
+		/**
+		 * 検索APIのような、ページング不可なエンドポイントを利用する場合
+		 * (そのようなAPIをこの関数で使うのは若干矛盾してるけど)
+		 */
+		noPaging?: boolean;
 
-	/**
-	 * items 配列の中身を逆順にする(新しい方が最後)
-	 */
-	reversed?: boolean;
+		/**
+		 * items 配列の中身を逆順にする(新しい方が最後)
+		 */
+		reversed?: boolean;
 
-	offsetMode?: boolean;
+		offsetMode?: boolean;
 
-	pageEl?: HTMLElement;
-};
+		pageEl?: HTMLElement;
+	};
 
-type MisskeyEntityMap = Map<string, MisskeyEntity>;
+	type MisskeyEntityMap = Map<string, MisskeyEntity>;
 
 function arrayToEntries(entities: MisskeyEntity[]): [string, MisskeyEntity][] {
 	return entities.map(en => [en.id, en]);
@@ -94,43 +94,40 @@ import { infoImageUrl } from '@/instance.js';
 import MkButton from '@/components/MkButton.vue';
 
 const props = withDefaults(defineProps<{
-	pagination: Paging;
-	disableAutoLoad?: boolean;
-	displayLimit?: number;
-	disableObserver?: boolean;
-	tolerance?: number;
-}>(), {
+		pagination: Paging;
+		disableAutoLoad?: boolean;
+		displayLimit?: number;
+	}>(), {
 	displayLimit: 20,
-	tolerance: TOLERANCE,
 });
 
 const emit = defineEmits<{
-	(ev: 'queue', count: number): void;
-	(ev: 'status', error: boolean): void;
-}>();
+		(ev: 'queue', count: number): void;
+		(ev: 'status', error: boolean): void;
+	}>();
 
 const rootEl = shallowRef<HTMLElement>();
 
 // 遡り中かどうか
-const backed = ref(true);
+const backed = ref(false);
 
 const scrollRemove = ref<(() => void) | null>(null);
 
 /**
- * 表示するアイテムのソース
- * 最新が0番目
- */
+	 * 表示するアイテムのソース
+	 * 最新が0番目
+	 */
 const items = ref<MisskeyEntityMap>(new Map());
 
 /**
- * タブが非アクティブなどの場合に更新を貯めておく
- * 最新が0番目
- */
+	 * タブが非アクティブなどの場合に更新を貯めておく
+	 * 最新が0番目
+	 */
 const queue = ref<MisskeyEntityMap>(new Map());
 
 /**
- * 初期化中かどうか（trueならMkLoadingで全て隠す）
- */
+	 * 初期化中かどうか（trueならMkLoadingで全て隠す）
+	 */
 const fetching = ref(true);
 
 const moreFetching = ref(false);
@@ -155,13 +152,11 @@ const BACKGROUND_PAUSE_WAIT_SEC = 10;
 
 // 先頭が表示されているかどうかを検出
 // https://qiita.com/mkataigi/items/0154aefd2223ce23398e
-let scrollObserver = ref<IntersectionObserver | null>(null);
+const scrollObserver = ref<IntersectionObserver>();
 
-const createScrollObserver = () => {
-	if (scrollObserver.value) {
-		scrollObserver.value.disconnect();
-		scrollObserver.value = null;
-	}
+watch([() => props.pagination.reversed, scrollableElement], () => {
+	if (scrollObserver.value) scrollObserver.value.disconnect();
+
 	scrollObserver.value = new IntersectionObserver(entries => {
 		backed.value = entries[0].isIntersecting;
 	}, {
@@ -169,16 +164,6 @@ const createScrollObserver = () => {
 		rootMargin: props.pagination.reversed ? '-100% 0px 100% 0px' : '100% 0px -100% 0px',
 		threshold: 0.01,
 	});
-};
-
-let initialScrollCleaner: (() => void) | undefined;
-
-watch([() => props.pagination.reversed, scrollableElement], () => {
-	if (props.disableObserver) {
-		initialScrollCleaner?.();
-	} else {
-		createScrollObserver();
-	}
 }, { immediate: true });
 
 watch(rootEl, () => {
@@ -224,15 +209,9 @@ async function init(): Promise<void> {
 		limit: props.pagination.limit ?? 10,
 		allowPartial: true,
 	}).then(res => {
-		for (let i = 0; i < res.length; i += 3) {
+		for (let i = 0; i < res.length; i++) {
 			const item = res[i];
-			if (!item) {
-				continue;
-			}
-			if (i === 3) {
-				item._shouldInsertAd_ = true;
-				break;
-			}
+			if (i === 3) item._shouldInsertAd_ = true;
 		}
 
 		if (res.length === 0 || props.pagination.noPaging) {
@@ -269,9 +248,9 @@ const fetchMore = async (): Promise<void> => {
 			untilId: Array.from(items.value.keys()).at(-1),
 		}),
 	}).then(res => {
-		for (let i = 0; i < res.length; i += 10) {
-			if (!res[i]) continue;
-			res[i]._shouldInsertAd_ = true;
+		for (let i = 0; i < res.length; i++) {
+			const item = res[i];
+			if (i === 10) item._shouldInsertAd_ = true;
 		}
 
 		const reverseConcat = _res => {
@@ -346,9 +325,9 @@ const fetchMoreAhead = async (): Promise<void> => {
 };
 
 /**
- * Appear（IntersectionObserver）によってfetchMoreが呼ばれる場合、
- * APPEAR_MINIMUM_INTERVALミリ秒以内に2回fetchMoreが呼ばれるのを防ぐ
- */
+	 * Appear（IntersectionObserver）によってfetchMoreが呼ばれる場合、
+	 * APPEAR_MINIMUM_INTERVALミリ秒以内に2回fetchMoreが呼ばれるのを防ぐ
+	 */
 const fetchMoreApperTimeoutFn = (): void => {
 	preventAppearFetchMore.value = false;
 	preventAppearFetchMoreTimer.value = null;
@@ -393,10 +372,10 @@ watch(visibility, () => {
 });
 
 /**
- * 最新のものとして1つだけアイテムを追加する
- * ストリーミングから降ってきたアイテムはこれで追加する
- * @param item アイテム
- */
+	 * 最新のものとして1つだけアイテムを追加する
+	 * ストリーミングから降ってきたアイテムはこれで追加する
+	 * @param item アイテム
+	 */
 const prepend = (item: MisskeyEntity): void => {
 	if (items.value.size === 0) {
 		items.value.set(item.id, item);
@@ -409,27 +388,25 @@ const prepend = (item: MisskeyEntity): void => {
 };
 
 /**
- * 新着アイテムをitemsの先頭に追加し、displayLimitを適用する
- * @param newItems 新しいアイテムの配列
- */
+	 * 新着アイテムをitemsの先頭に追加し、displayLimitを適用する
+	 * @param newItems 新しいアイテムの配列
+	 */
 function unshiftItems(newItems: MisskeyEntity[]) {
-	const mapEntries = [...arrayToEntries(newItems), ...items.value].slice(0, props.displayLimit);
-	items.value = new Map(mapEntries);
+	const length = newItems.length + items.value.size;
+	items.value = new Map([...arrayToEntries(newItems), ...items.value].slice(0, props.displayLimit));
+
 	if (length >= props.displayLimit) more.value = true;
-	offset.value = mapEntries.length;
 }
 
 /**
- * 古いアイテムをitemsの末尾に追加し、displayLimitを適用する
- * @param oldItems 古いアイテムの配列
- */
+	 * 古いアイテムをitemsの末尾に追加し、displayLimitを適用する
+	 * @param oldItems 古いアイテムの配列
+	 */
 function concatItems(oldItems: MisskeyEntity[]) {
 	const length = oldItems.length + items.value.size;
-	const mapEntries = [...items.value, ...arrayToEntries(oldItems)].slice(0, props.displayLimit);
+	items.value = new Map([...items.value, ...arrayToEntries(oldItems)].slice(0, props.displayLimit));
 
-	items.value = new Map(mapEntries);
 	if (length >= props.displayLimit) more.value = true;
-	offset.value = mapEntries.length;
 }
 
 function executeQueue() {
@@ -442,8 +419,8 @@ function prependQueue(newItem: MisskeyEntity) {
 }
 
 /*
- * アイテムを末尾に追加する（使うの？）
- */
+	 * アイテムを末尾に追加する（使うの？）
+	 */
 const appendItem = (item: MisskeyEntity): void => {
 	items.value.set(item.id, item);
 };
@@ -461,32 +438,6 @@ const updateItem = (id: MisskeyEntity['id'], replacer: (old: MisskeyEntity) => M
 	if (queueItem) queue.value.set(id, replacer(queueItem));
 };
 
-const createInitialScrollListener = () => {
-	if (!props.disableObserver || !contentEl.value) {
-		return;
-	}
-	setTimeout(() => {
-		initialScrollCleaner = (props.pagination.reversed ? onScrollUpOnce : onScrollDownOnce)(contentEl.value!, () => {
-			backed.value = false;
-			nextTick(() => {
-				const cleaner = (props.pagination.reversed ? onScrollBottom : onScrollTop)(contentEl.value!, () => {
-					setTimeout(() => {
-						backed.value = true;
-						createInitialScrollListener();
-					});
-				}, props.tolerance, true, false);
-				if (cleaner) initialScrollCleaner = cleaner;
-			});
-		});
-	});
-};
-
-watch(contentEl, () => {
-	if (props.disableObserver) {
-		createInitialScrollListener();
-	}
-});
-
 onActivated(() => {
 	isBackTop.value = false;
 });
@@ -503,22 +454,13 @@ onBeforeMount(() => {
 	init().then(() => {
 		if (props.pagination.reversed) {
 			nextTick(() => {
-				setTimeout(() => {
-					toBottom();
-					setTimeout(() => {
-						createInitialScrollListener();
-					});
-				}, 800);
+				setTimeout(toBottom, 800);
 
 				// scrollToBottomでmoreFetchingボタンが画面外まで出るまで
 				// more = trueを遅らせる
 				setTimeout(() => {
 					moreFetching.value = false;
 				}, 2000);
-			});
-		} else {
-			nextTick(() => {
-				createInitialScrollListener();
 			});
 		}
 	});
@@ -549,18 +491,18 @@ defineExpose({
 });
 </script>
 
-<style lang="scss" module>
-.transition_fade_enterActive,
-.transition_fade_leaveActive {
-	transition: opacity 0.125s ease;
-}
-.transition_fade_enterFrom,
-.transition_fade_leaveTo {
-	opacity: 0;
-}
+	<style lang="scss" module>
+	.transition_fade_enterActive,
+	.transition_fade_leaveActive {
+		transition: opacity 0.125s ease;
+	}
+	.transition_fade_enterFrom,
+	.transition_fade_leaveTo {
+		opacity: 0;
+	}
 
-.more {
-	margin-left: auto;
-	margin-right: auto;
-}
-</style>
+	.more {
+		margin-left: auto;
+		margin-right: auto;
+	}
+	</style>

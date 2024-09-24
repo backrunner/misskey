@@ -4,7 +4,13 @@
  */
 
 import * as Misskey from 'misskey-js';
+import SparkMD5 from 'spark-md5';
 import { query } from './url.js';
+
+export const getProxySign = (targetUrl: string, signKey: string): string => {
+	const hash = SparkMD5.hash(`${targetUrl}_${signKey}_${location.origin}`);
+	return hash;
+};
 
 export class MediaProxy {
 	private serverMetadata: Misskey.entities.MetaDetailed;
@@ -32,6 +38,7 @@ export class MediaProxy {
 			...(!noFallback ? { 'fallback': '1' } : {}),
 			...(type ? { [type]: '1' } : {}),
 			...(mustOrigin ? { origin: '1' } : {}),
+			...(this.serverMetadata.mediaProxyKey ? { sign: getProxySign(_imageUrl, this.serverMetadata.mediaProxyKey) } : {}),
 		})}`;
 	}
 
@@ -58,6 +65,7 @@ export class MediaProxy {
 		return `${this.serverMetadata.mediaProxy}/static.webp?${query({
 			url: u.href,
 			static: '1',
+			...(this.serverMetadata.mediaProxyKey ? { sign: getProxySign(u.href, this.serverMetadata.mediaProxyKey) } : {}),
 		})}`;
 	}
 }

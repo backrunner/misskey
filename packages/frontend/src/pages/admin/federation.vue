@@ -43,7 +43,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</MkSelect>
 					</FormSplit>
 				</div>
-				<MkPagination v-slot="{items}" ref="instances" :key="host + state" :pagination="pagination" :tolerance="1" disableObserver>
+				<MkPagination v-slot="{items}" ref="instances" :key="host + state" :pagination="pagination">
 					<div :class="$style.instances">
 						<MkA v-for="instance in items" :key="instance.id" v-tooltip.mfm="`Status: ${getStatus(instance)}`" :class="$style.instance" :to="`/instance-info/${instance.host}`">
 							<MkInstanceCardMini :instance="instance"/>
