@@ -4959,6 +4959,7 @@ export type components = {
       enableServiceWorker: boolean;
       translatorAvailable: boolean;
       mediaProxy: string;
+      mediaProxyKey: string;
       enableUrlPreview: boolean;
       backgroundImageUrl: string | null;
       impressumUrl: string | null;
