@@ -7,52 +7,36 @@ import { md5 } from '@/scripts/hash';
 import { query } from '@/scripts/url';
 import { instance } from '@/instance';
 
+import { MediaProxy } from '@@/js/media-proxy.js';
+import { url } from '@@/js/config.js';
+import { instance } from '@/instance.js';
+
 export const getProxySign = (targetUrl: string, signKey: string): string => {
 	return md5(`${targetUrl}_${signKey}_${location.origin}`);
 };
 
-export function getProxiedImageUrl(imageUrl: string, type?: 'preview' | 'emoji' | 'avatar', mustOrigin = false, noFallback = false): string {
-	const localProxy = `${url}/proxy`;
+let _mediaProxy: MediaProxy | null = null;
 
-	if (imageUrl.startsWith(instance.mediaProxy + '/') || imageUrl.startsWith('/proxy/') || imageUrl.startsWith(localProxy + '/')) {
-		// もう既にproxyっぽそうだったらurlを取り出す
-		imageUrl = (new URL(imageUrl)).searchParams.get('url') ?? imageUrl;
+export function getProxiedImageUrl(...args: Parameters<MediaProxy['getProxiedImageUrl']>): string {
+	if (_mediaProxy == null) {
+		_mediaProxy = new MediaProxy(instance, url);
 	}
 
-	return `${mustOrigin ? localProxy : instance.mediaProxy}/${type === 'preview' ? 'preview.webp'
-		: 'image.webp'
-	}?${query({
-		url: imageUrl,
-		...(!noFallback ? { 'fallback': '1' } : {}),
-		...(type ? { [type]: '1' } : {}),
-		...(mustOrigin ? { origin: '1' } : {}),
-		...(instance.mediaProxyKey ? { sign: getProxySign(imageUrl, instance.mediaProxyKey) } : {}),
-	})}`;
+	return _mediaProxy.getProxiedImageUrl(...args);
 }
 
-export function getProxiedImageUrlNullable(imageUrl: string | null | undefined, type?: 'preview'): string | null {
-	if (imageUrl == null) return null;
-	return getProxiedImageUrl(imageUrl, type);
+export function getProxiedImageUrlNullable(...args: Parameters<MediaProxy['getProxiedImageUrlNullable']>): string | null {
+	if (_mediaProxy == null) {
+		_mediaProxy = new MediaProxy(instance, url);
+	}
+
+	return _mediaProxy.getProxiedImageUrlNullable(...args);
 }
 
-export function getStaticImageUrl(baseUrl: string): string {
-	const u = baseUrl.startsWith('http') ? new URL(baseUrl) : new URL(baseUrl, url);
-
-	if (u.href.startsWith(`${url}/emoji/`)) {
-		// もう既にemojiっぽそうだったらsearchParams付けるだけ
-		u.searchParams.set('static', '1');
-		return u.href;
+export function getStaticImageUrl(...args: Parameters<MediaProxy['getStaticImageUrl']>): string {
+	if (_mediaProxy == null) {
+		_mediaProxy = new MediaProxy(instance, url);
 	}
 
-	if (u.href.startsWith(instance.mediaProxy + '/')) {
-		// もう既にproxyっぽそうだったらsearchParams付けるだけ
-		u.searchParams.set('static', '1');
-		return u.href;
-	}
-
-	return `${instance.mediaProxy}/static.webp?${query({
-		url: u.href,
-		static: '1',
-		...(instance.mediaProxyKey ? { sign: getProxySign(u.href, instance.mediaProxyKey) } : {}),
-	})}`;
+	return _mediaProxy.getStaticImageUrl(...args);
 }

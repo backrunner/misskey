@@ -86,7 +86,7 @@ export class FileServerService {
 					.catch(err => this.errorHandler(request, reply, err));
 			});
 			fastify.get<{ Params: { key: string; } }>('/files/:key/*', async (request, reply) => {
-				return await reply.redirect(301, `${this.config.url}/files/${request.params.key}`);
+				return await reply.redirect(`${this.config.url}/files/${request.params.key}`, 301);
 			});
 			done();
 		});
@@ -155,12 +155,12 @@ export class FileServerService {
 						}
 
 						file.cleanup();
-						return await reply.redirect(301, url.toString());
+						return await reply.redirect(url.toString(), 301);
 					} else if (file.mime.startsWith('video/')) {
 						const externalThumbnail = this.videoProcessingService.getExternalVideoThumbnailUrl(file.url);
 						if (externalThumbnail) {
 							file.cleanup();
-							return await reply.redirect(301, externalThumbnail);
+							return await reply.redirect(externalThumbnail, 301);
 						}
 
 						image = await this.videoProcessingService.generateVideoThumbnail(file.path);
@@ -179,7 +179,7 @@ export class FileServerService {
 						}
 
 						file.cleanup();
-						return await reply.redirect(301, url.toString());
+						return await reply.redirect(url.toString(), 301);
 					}
 				}
 
@@ -361,8 +361,8 @@ export class FileServerService {
 			}
 
 			return await reply.redirect(
-				301,
 				url.toString(),
+				301,
 			);
 		}
 
