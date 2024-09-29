@@ -43,6 +43,7 @@ import { MfmService } from './MfmService.js';
 import { ModerationLogService } from './ModerationLogService.js';
 import { NoteCreateService } from './NoteCreateService.js';
 import { NoteDeleteService } from './NoteDeleteService.js';
+import { NoteDraftService } from './NoteDraftService.js';
 import { NotePiningService } from './NotePiningService.js';
 import { NoteReadService } from './NoteReadService.js';
 import { NotificationService } from './NotificationService.js';
@@ -186,6 +187,7 @@ const $MfmService: Provider = { provide: 'MfmService', useExisting: MfmService }
 const $ModerationLogService: Provider = { provide: 'ModerationLogService', useExisting: ModerationLogService };
 const $NoteCreateService: Provider = { provide: 'NoteCreateService', useExisting: NoteCreateService };
 const $NoteDeleteService: Provider = { provide: 'NoteDeleteService', useExisting: NoteDeleteService };
+const $NoteDraftService: Provider = { provide: 'NoteDraftService', useExisting: NoteDraftService };
 const $NotePiningService: Provider = { provide: 'NotePiningService', useExisting: NotePiningService };
 const $NoteReadService: Provider = { provide: 'NoteReadService', useExisting: NoteReadService };
 const $NotificationService: Provider = { provide: 'NotificationService', useExisting: NotificationService };
@@ -336,6 +338,7 @@ const $ApQuestionService: Provider = { provide: 'ApQuestionService', useExisting
 		ModerationLogService,
 		NoteCreateService,
 		NoteDeleteService,
+		NoteDraftService,
 		NotePiningService,
 		NoteReadService,
 		NotificationService,
@@ -482,6 +485,7 @@ const $ApQuestionService: Provider = { provide: 'ApQuestionService', useExisting
 		$ModerationLogService,
 		$NoteCreateService,
 		$NoteDeleteService,
+		$NoteDraftService,
 		$NotePiningService,
 		$NoteReadService,
 		$NotificationService,
@@ -629,6 +633,7 @@ const $ApQuestionService: Provider = { provide: 'ApQuestionService', useExisting
 		ModerationLogService,
 		NoteCreateService,
 		NoteDeleteService,
+		NoteDraftService,
 		NotePiningService,
 		NoteReadService,
 		NotificationService,
@@ -774,6 +779,7 @@ const $ApQuestionService: Provider = { provide: 'ApQuestionService', useExisting
 		$ModerationLogService,
 		$NoteCreateService,
 		$NoteDeleteService,
+		$NoteDraftService,
 		$NotePiningService,
 		$NoteReadService,
 		$NotificationService,

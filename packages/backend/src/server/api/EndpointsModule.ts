@@ -280,6 +280,9 @@ import * as ep___notes_children from './endpoints/notes/children.js';
 import * as ep___notes_clips from './endpoints/notes/clips.js';
 import * as ep___notes_conversation from './endpoints/notes/conversation.js';
 import * as ep___notes_create from './endpoints/notes/create.js';
+import * as ep___notes_drafts_get from './endpoints/notes/drafts/get.js';
+import * as ep___notes_drafts_save from './endpoints/notes/drafts/save.js';
+import * as ep___notes_drafts_delete from './endpoints/notes/drafts/delete.js';
 import * as ep___notes_delete from './endpoints/notes/delete.js';
 import * as ep___notes_favorites_create from './endpoints/notes/favorites/create.js';
 import * as ep___notes_favorites_delete from './endpoints/notes/favorites/delete.js';
@@ -665,6 +668,9 @@ const $notes_children: Provider = { provide: 'ep:notes/children', useClass: ep__
 const $notes_clips: Provider = { provide: 'ep:notes/clips', useClass: ep___notes_clips.default };
 const $notes_conversation: Provider = { provide: 'ep:notes/conversation', useClass: ep___notes_conversation.default };
 const $notes_create: Provider = { provide: 'ep:notes/create', useClass: ep___notes_create.default };
+const $notes_drafts_get: Provider = { provide: 'ep:notes/drafts/get', useClass: ep___notes_drafts_get.default };
+const $notes_drafts_save: Provider = { provide: 'ep:notes/drafts/save', useClass: ep___notes_drafts_save.default };
+const $notes_drafts_delete: Provider = { provide: 'ep:notes/drafts/delete', useClass: ep___notes_drafts_delete.default };
 const $notes_delete: Provider = { provide: 'ep:notes/delete', useClass: ep___notes_delete.default };
 const $notes_favorites_create: Provider = { provide: 'ep:notes/favorites/create', useClass: ep___notes_favorites_create.default };
 const $notes_favorites_delete: Provider = { provide: 'ep:notes/favorites/delete', useClass: ep___notes_favorites_delete.default };
@@ -1055,6 +1061,9 @@ const $reversi_verify: Provider = { provide: 'ep:reversi/verify', useClass: ep__
 		$notes_conversation,
 		$notes_create,
 		$notes_delete,
+		$notes_drafts_get,
+		$notes_drafts_save,
+		$notes_drafts_delete,
 		$notes_favorites_create,
 		$notes_favorites_delete,
 		$notes_featured,
@@ -1438,6 +1447,9 @@ const $reversi_verify: Provider = { provide: 'ep:reversi/verify', useClass: ep__
 		$notes_conversation,
 		$notes_create,
 		$notes_delete,
+		$notes_drafts_get,
+		$notes_drafts_save,
+		$notes_drafts_delete,
 		$notes_favorites_create,
 		$notes_favorites_delete,
 		$notes_featured,

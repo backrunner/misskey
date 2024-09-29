@@ -410,6 +410,8 @@ import type {
 	NotesConversationResponse,
 	NotesCreateRequest,
 	NotesCreateResponse,
+	NotesDraftsGetResponse,
+	NotesDraftsSaveRequest,
 	NotesDeleteRequest,
 	NotesFavoritesCreateRequest,
 	NotesFavoritesDeleteRequest,
@@ -850,6 +852,9 @@ export type Endpoints = {
 	'notes/clips': { req: NotesClipsRequest; res: NotesClipsResponse };
 	'notes/conversation': { req: NotesConversationRequest; res: NotesConversationResponse };
 	'notes/create': { req: NotesCreateRequest; res: NotesCreateResponse };
+	'notes/drafts/get': { req: EmptyRequest; res: NotesDraftsGetResponse };
+	'notes/drafts/save': { req: NotesDraftsSaveRequest; res: EmptyResponse };
+	'notes/drafts/delete': { req: EmptyRequest; res: EmptyResponse };
 	'notes/delete': { req: NotesDeleteRequest; res: EmptyResponse };
 	'notes/favorites/create': { req: NotesFavoritesCreateRequest; res: EmptyResponse };
 	'notes/favorites/delete': { req: NotesFavoritesDeleteRequest; res: EmptyResponse };

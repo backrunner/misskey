@@ -2267,6 +2267,8 @@ _postForm:
   replyPlaceholder: "このノートに返信..."
   quotePlaceholder: "このノートを引用..."
   channelPlaceholder: "チャンネルに投稿..."
+  draftFoundOnOtherDevice: "このノートは他のデバイスで編集中です。"
+  useDraft: "このノートを使用する"
   _placeholders:
     a: "いまどうしてる？"
     b: "何かありましたか？"

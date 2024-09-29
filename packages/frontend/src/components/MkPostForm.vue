@@ -100,22 +100,23 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { inject, watch, nextTick, onMounted, defineAsyncComponent, provide, shallowRef, ref, computed } from 'vue';
+import { inject, watch, nextTick, onMounted, defineAsyncComponent, provide, shallowRef, ref, computed, onUnmounted } from 'vue';
 import * as mfm from 'mfm-js';
 import * as Misskey from 'misskey-js';
 import insertTextAtCursor from 'insert-text-at-cursor';
 import { toASCII } from 'punycode/';
+import { host, url } from '@@/js/config.js';
+import { throttle } from 'throttle-debounce';
 import MkNoteSimple from '@/components/MkNoteSimple.vue';
 import MkNotePreview from '@/components/MkNotePreview.vue';
 import XPostFormAttaches from '@/components/MkPostFormAttaches.vue';
 import MkPollEditor, { type PollEditorModelValue } from '@/components/MkPollEditor.vue';
-import { host, url } from '@@/js/config.js';
 import { erase, unique } from '@/scripts/array.js';
 import { extractMentions } from '@/scripts/extract-mentions.js';
 import { formatTimeString } from '@/scripts/format-time-string.js';
 import { Autocomplete } from '@/scripts/autocomplete.js';
 import * as os from '@/os.js';
-import { misskeyApi } from '@/scripts/misskey-api.js';
+import { misskeyApi, misskeyApiGet } from '@/scripts/misskey-api.js';
 import { selectFiles } from '@/scripts/select-file.js';
 import { defaultStore, notePostInterruptors, postFormActions } from '@/store.js';
 import MkInfo from '@/components/MkInfo.vue';
@@ -201,6 +202,9 @@ const recentHashtags = ref(JSON.parse(miLocalStorage.getItem('hashtags') ?? '[]'
 const imeText = ref('');
 const showingOptions = ref(false);
 const textAreaReadOnly = ref(false);
+
+const hasDraftOnServer = ref(false);
+const isLoadingDraft = ref(false);
 
 const draftKey = computed((): string => {
 	let key = props.channel ? `channel:${props.channel.id}` : '';
@@ -689,28 +693,64 @@ function onDrop(ev: DragEvent): void {
 	//#endregion
 }
 
+const saveDraftToServer = throttle(5000, async (draftData) => {
+	const toSubmit = draftData;
+	if (toSubmit.files) {
+		toSubmit.files = JSON.stringify(toSubmit.files);
+	}
+	if (toSubmit.poll) {
+		toSubmit.poll = JSON.stringify(toSubmit.poll);
+	}
+	try {
+		await misskeyApi('notes/drafts/save', toSubmit);
+	} catch (error) {
+		console.error('Failed to save draft to server:', error);
+	}
+});
+
 function saveDraft() {
 	if (props.instant || props.mock) return;
 
-	const draftData = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}');
+	// no text, no cw text, no files, no poll, no cw text
+	if (!text.value && !files.value.length && !poll.value) {
+		if (useCw.value && cw.value) {
+			deleteDraft();
+			return;
+		} else if (!useCw.value) {
+			deleteDraft();
+			return;
+		}
+	}
 
-	draftData[draftKey.value] = {
-		updatedAt: new Date(),
-		data: {
-			text: text.value,
-			useCw: useCw.value,
-			cw: cw.value,
-			visibility: visibility.value,
-			localOnly: localOnly.value,
-			files: files.value,
-			poll: poll.value,
-			visibleUserIds: visibility.value === 'specified' ? visibleUsers.value.map(x => x.id) : undefined,
-			quoteId: quoteId.value,
-			reactionAcceptance: reactionAcceptance.value,
-		},
+	const draftData = {
+		text: text.value,
+		useCw: useCw.value,
+		cw: cw.value,
+		visibility: visibility.value,
+		localOnly: localOnly.value,
+		files: files.value,
+		poll: poll.value,
+		visibleUserIds: visibility.value === 'specified' ? visibleUsers.value.map(x => x.id) : undefined,
+		quoteId: quoteId.value,
+		reactionAcceptance: reactionAcceptance.value,
 	};
 
-	miLocalStorage.setItem('drafts', JSON.stringify(draftData));
+	const draftDataForLocalStorage = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}');
+	draftDataForLocalStorage[draftKey.value] = {
+		updatedAt: new Date(),
+		data: draftData,
+	};
+	miLocalStorage.setItem('drafts', JSON.stringify(draftDataForLocalStorage));
+
+	saveDraftToServer(draftData);
+}
+
+async function deleteRemoteDraft() {
+	try {
+		await misskeyApi('notes/drafts/delete');
+	} catch (error) {
+		console.error('Failed to delete remote draft:', error);
+	}
 }
 
 function deleteDraft() {
@@ -719,6 +759,58 @@ function deleteDraft() {
 	delete draftData[draftKey.value];
 
 	miLocalStorage.setItem('drafts', JSON.stringify(draftData));
+
+	deleteRemoteDraft();
+}
+
+async function checkServerDraft() {
+	if (props.reply ?? props.renote) return;
+
+	isLoadingDraft.value = true;
+	try {
+		const draft = await misskeyApiGet('notes/drafts/get', {
+			i: $i.token,
+		});
+		if (draft) {
+			hasDraftOnServer.value = true;
+			os.confirm({
+				type: 'info',
+				text: i18n.ts._postForm.draftFoundOnOtherDevice,
+				okText: i18n.ts._postForm.useDraft,
+				cancelText: i18n.ts.cancel,
+			}).then(({ canceled }) => {
+				if (!canceled) {
+					text.value = draft.text ?? '';
+					useCw.value = !!draft.useCw;
+					if (draft.useCw && draft.cw) {
+						cw.value = draft.cw;
+					}
+					visibility.value = draft.visibility;
+					localOnly.value = draft.localOnly;
+					if (draft.files) {
+						files.value = JSON.parse(draft.files);
+					}
+					if (draft.poll) {
+						poll.value = JSON.parse(draft.poll);
+					}
+					if (draft.visibleUserIds) {
+						draft.visibleUserIds.forEach(userId => {
+							misskeyApi('users/show', { userId }).then(user => {
+								pushVisibleUser(user);
+							});
+						});
+					}
+					if (draft.reactionAcceptance) {
+						reactionAcceptance.value = draft.reactionAcceptance;
+					}
+				}
+			});
+		}
+	} catch (error) {
+		console.error('Failed to fetch draft from server:', error);
+	} finally {
+		isLoadingDraft.value = false;
+	}
 }
 
 async function post(ev?: MouseEvent) {
@@ -1010,6 +1102,8 @@ onMounted(() => {
 				}
 				quoteId.value = draft.data.quoteId;
 				reactionAcceptance.value = draft.data.reactionAcceptance;
+			} else {
+				checkServerDraft();
 			}
 		}
 
@@ -1041,6 +1135,10 @@ onMounted(() => {
 
 		nextTick(() => watchForDraft());
 	});
+});
+
+onUnmounted(() => {
+	saveDraftToServer.cancel();
 });
 
 defineExpose({

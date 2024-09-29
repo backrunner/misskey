@@ -2651,6 +2651,44 @@ export type paths = {
      */
     post: operations['notes___create'];
   };
+  '/notes/drafts/get': {
+    /**
+     * notes/drafts/get
+     * @description No description provided.
+     *
+     * **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+     * **Credential required**: *Yes* / **Permission**: *read:notes:drafts*
+     */
+    get: operations['notes___drafts___get'];
+    /**
+     * notes/drafts/get
+     * @description No description provided.
+     *
+     * **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+     * **Credential required**: *Yes* / **Permission**: *read:notes:drafts*
+     */
+    post: operations['notes___drafts___get'];
+  };
+  '/notes/drafts/save': {
+    /**
+     * notes/drafts/save
+     * @description No description provided.
+     *
+     * **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+     * **Credential required**: *Yes* / **Permission**: *write:notes:drafts*
+     */
+    post: operations['notes___drafts___save'];
+  };
+  '/notes/drafts/delete': {
+    /**
+     * notes/drafts/delete
+     * @description No description provided.
+     *
+     * **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+     * **Credential required**: *Yes* / **Permission**: *write:notes:drafts*
+     */
+    post: operations['notes___drafts___delete'];
+  };
   '/notes/delete': {
     /**
      * notes/delete
@@ -21436,6 +21474,202 @@ export type operations = {
       };
       /** @description To many requests */
       429: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  /**
+   * notes/drafts/get
+   * @description No description provided.
+   *
+   * **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+   * **Credential required**: *Yes* / **Permission**: *read:notes:drafts*
+   */
+  notes___drafts___get: {
+    responses: {
+      /** @description OK (with results) */
+      200: {
+        content: {
+          'application/json': ({
+            /**
+             * Format: id
+             * @example xxxxxxxxxx
+             */
+            id: string;
+            /** Format: id */
+            userId: string;
+            text?: string | null;
+            useCw: boolean;
+            cw?: string | null;
+            /** @enum {string} */
+            visibility: 'public' | 'home' | 'followers' | 'specified';
+            localOnly: boolean;
+            files?: string | null;
+            poll?: string | null;
+            visibleUserIds?: string[] | null;
+            /** Format: id */
+            quoteId?: string | null;
+            /** @enum {string|null} */
+            reactionAcceptance?: 'likeOnly' | 'likeOnlyForRemote' | 'nonSensitiveOnly' | 'nonSensitiveOnlyForLocalLikeOnlyForRemote' | null;
+            /** Format: date-time */
+            updatedAt: string;
+          }) | null;
+        };
+      };
+      /** @description OK (without any results) */
+      204: {
+        content: never;
+      };
+      /** @description Client error */
+      400: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Authentication error */
+      401: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Forbidden error */
+      403: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description I'm Ai */
+      418: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  /**
+   * notes/drafts/save
+   * @description No description provided.
+   *
+   * **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+   * **Credential required**: *Yes* / **Permission**: *write:notes:drafts*
+   */
+  notes___drafts___save: {
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: misskey:id */
+          id?: string | null;
+          text?: string | null;
+          /** @default false */
+          useCw?: boolean;
+          cw?: string | null;
+          /**
+           * @default public
+           * @enum {string}
+           */
+          visibility?: 'public' | 'home' | 'followers' | 'specified';
+          visibleUserIds?: string[];
+          /** @default false */
+          localOnly?: boolean;
+          /** @enum {string|null} */
+          reactionAcceptance?: null | 'likeOnly' | 'likeOnlyForRemote' | 'nonSensitiveOnly' | 'nonSensitiveOnlyForLocalLikeOnlyForRemote';
+          files?: string | null;
+          poll?: string | null;
+          /** Format: misskey:id */
+          quoteId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK (without any results) */
+      204: {
+        content: never;
+      };
+      /** @description Client error */
+      400: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Authentication error */
+      401: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Forbidden error */
+      403: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description I'm Ai */
+      418: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description To many requests */
+      429: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  /**
+   * notes/drafts/delete
+   * @description No description provided.
+   *
+   * **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+   * **Credential required**: *Yes* / **Permission**: *write:notes:drafts*
+   */
+  notes___drafts___delete: {
+    responses: {
+      /** @description OK (without any results) */
+      204: {
+        content: never;
+      };
+      /** @description Client error */
+      400: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Authentication error */
+      401: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Forbidden error */
+      403: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description I'm Ai */
+      418: {
         content: {
           'application/json': components['schemas']['Error'];
         };

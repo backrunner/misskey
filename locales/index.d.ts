@@ -8613,6 +8613,14 @@ export interface Locale extends ILocale {
          * チャンネルに投稿...
          */
         "channelPlaceholder": string;
+        /**
+         * このノートは他のデバイスで編集中です。
+         */
+        "draftFoundOnOtherDevice": string;
+        /**
+         * このノートを使用する
+         */
+        "useDraft": string;
         "_placeholders": {
             /**
              * いまどうしてる？

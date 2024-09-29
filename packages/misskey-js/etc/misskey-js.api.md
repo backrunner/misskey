@@ -1604,6 +1604,8 @@ declare namespace entities {
         NotesConversationResponse,
         NotesCreateRequest,
         NotesCreateResponse,
+        NotesDraftsGetResponse,
+        NotesDraftsSaveRequest,
         NotesDeleteRequest,
         NotesFavoritesCreateRequest,
         NotesFavoritesDeleteRequest,
@@ -2628,6 +2630,12 @@ type NotesCreateResponse = operations['notes___create']['responses']['200']['con
 
 // @public (undocumented)
 type NotesDeleteRequest = operations['notes___delete']['requestBody']['content']['application/json'];
+
+// @public (undocumented)
+type NotesDraftsGetResponse = operations['notes___drafts___get']['responses']['200']['content']['application/json'];
+
+// @public (undocumented)
+type NotesDraftsSaveRequest = operations['notes___drafts___save']['requestBody']['content']['application/json'];
 
 // @public (undocumented)
 type NotesFavoritesCreateRequest = operations['notes___favorites___create']['requestBody']['content']['application/json'];

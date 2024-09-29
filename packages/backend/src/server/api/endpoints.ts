@@ -287,6 +287,9 @@ import * as ep___notes_clips from './endpoints/notes/clips.js';
 import * as ep___notes_conversation from './endpoints/notes/conversation.js';
 import * as ep___notes_create from './endpoints/notes/create.js';
 import * as ep___notes_delete from './endpoints/notes/delete.js';
+import * as ep___notes_drafts_get from './endpoints/notes/drafts/get.js';
+import * as ep___notes_drafts_save from './endpoints/notes/drafts/save.js';
+import * as ep___notes_drafts_delete from './endpoints/notes/drafts/delete.js';
 import * as ep___notes_favorites_create from './endpoints/notes/favorites/create.js';
 import * as ep___notes_favorites_delete from './endpoints/notes/favorites/delete.js';
 import * as ep___notes_featured from './endpoints/notes/featured.js';
@@ -669,6 +672,9 @@ const eps = [
 	['notes/clips', ep___notes_clips],
 	['notes/conversation', ep___notes_conversation],
 	['notes/create', ep___notes_create],
+	['notes/drafts/get', ep___notes_drafts_get],
+	['notes/drafts/save', ep___notes_drafts_save],
+	['notes/drafts/delete', ep___notes_drafts_delete],
 	['notes/delete', ep___notes_delete],
 	['notes/favorites/create', ep___notes_favorites_create],
 	['notes/favorites/delete', ep___notes_favorites_delete],
