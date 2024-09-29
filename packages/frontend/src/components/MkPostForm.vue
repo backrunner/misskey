@@ -568,8 +568,18 @@ function removeVisibleUser(user) {
 	visibleUsers.value = erase(user, visibleUsers.value);
 }
 
+const isResizing = ref(false);
+
 function autoResizeTextarea() {
-	nextTick(() => textareaEl.value && autosize.update(textareaEl.value));
+	if (isResizing.value) return;
+  
+	isResizing.value = true;
+	nextTick(() => {
+		if (textareaEl.value) {
+			autosize.update(textareaEl.value);
+		}
+		isResizing.value = false;
+	});
 }
 
 function clear() {
