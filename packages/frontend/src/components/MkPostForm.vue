@@ -103,6 +103,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { inject, watch, nextTick, onMounted, defineAsyncComponent, provide, shallowRef, ref, computed, onUnmounted } from 'vue';
 import * as mfm from 'mfm-js';
 import * as Misskey from 'misskey-js';
+import autosize from 'autosize';
 import insertTextAtCursor from 'insert-text-at-cursor';
 import { toASCII } from 'punycode/';
 import { host, url } from '@@/js/config.js';
@@ -567,25 +568,37 @@ function removeVisibleUser(user) {
 	visibleUsers.value = erase(user, visibleUsers.value);
 }
 
+function autoResizeTextarea() {
+	nextTick(() => textareaEl.value && autosize.update(textareaEl.value));
+}
+
 function clear() {
 	text.value = '';
 	files.value = [];
 	poll.value = null;
 	quoteId.value = null;
+
+	autoResizeTextarea();
 }
 
 function onKeydown(ev: KeyboardEvent) {
 	if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey) && canPost.value) post();
 
 	if (ev.key === 'Escape') emit('esc');
+
+	autoResizeTextarea();
 }
 
 function onCompositionUpdate(ev: CompositionEvent) {
 	imeText.value = ev.data;
+
+	autoResizeTextarea();
 }
 
 function onCompositionEnd(ev: CompositionEvent) {
 	imeText.value = '';
+
+	autoResizeTextarea();
 }
 
 async function onPaste(ev: ClipboardEvent) {
