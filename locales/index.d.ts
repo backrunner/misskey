@@ -961,6 +961,14 @@ export interface Locale extends ILocale {
      */
     "mediaSilencedInstancesDescription": string;
     /**
+     * 連合を許可するサーバー
+     */
+    "federationAllowedHosts": string;
+    /**
+     * 連合を許可するサーバーのホストを改行で区切って設定します。
+     */
+    "federationAllowedHostsDescription": string;
+    /**
      * ミュートとブロック
      */
     "muteAndBlock": string;
@@ -1352,6 +1360,10 @@ export interface Locale extends ILocale {
      * ファイルを追加
      */
     "addFile": string;
+    /**
+     * ファイルを表示
+     */
+    "showFile": string;
     /**
      * ドライブは空です
      */
@@ -2053,9 +2065,21 @@ export interface Locale extends ILocale {
      */
     "native": string;
     /**
-     * メニューをドロワーで表示しない
+     * メニューのスタイル
      */
-    "disableDrawer": string;
+    "menuStyle": string;
+    /**
+     * スタイル
+     */
+    "style": string;
+    /**
+     * ドロワー
+     */
+    "drawer": string;
+    /**
+     * ポップアップ
+     */
+    "popup": string;
     /**
      * ノートのアクションをホバー時のみ表示する
      */
@@ -5108,6 +5132,22 @@ export interface Locale extends ILocale {
      * {n}件の変更があります
      */
     "thereAreNChanges": ParameterizedString<"n">;
+    /**
+     * パスキーでログイン
+     */
+    "signinWithPasskey": string;
+    /**
+     * 登録されていないパスキーです。
+     */
+    "unknownWebAuthnKey": string;
+    /**
+     * パスキーの検証に失敗しました。
+     */
+    "passkeyVerificationFailed": string;
+    /**
+     * パスキーの検証に成功しましたが、パスワードレスログインが無効になっています。
+     */
+    "passkeyVerificationSucceededButPasswordlessLoginDisabled": string;
     "_delivery": {
         /**
          * 配信状態
@@ -8701,6 +8741,18 @@ export interface Locale extends ILocale {
          * 最大{max}つまでデコレーションを付けられます。
          */
         "avatarDecorationMax": ParameterizedString<"max">;
+        /**
+         * フォローされた時のメッセージ
+         */
+        "followedMessage": string;
+        /**
+         * フォローされた時に相手に表示する短いメッセージを設定できます。
+         */
+        "followedMessageDescription": string;
+        /**
+         * フォローを承認制にしている場合、フォローリクエストを許可した時に表示されます。
+         */
+        "followedMessageDescriptionForLockedAccount": string;
     };
     "_exportOrImport": {
         /**
@@ -9233,6 +9285,10 @@ export interface Locale extends ILocale {
          * 通知の履歴をリセットする
          */
         "flushNotification": string;
+        /**
+         * {x}のエクスポートが完了しました
+         */
+        "exportOfXCompleted": ParameterizedString<"x">;
         "_types": {
             /**
              * すべて
@@ -9286,6 +9342,14 @@ export interface Locale extends ILocale {
              * 実績の獲得
              */
             "achievementEarned": string;
+            /**
+             * エクスポートが完了した
+             */
+            "exportCompleted": string;
+            /**
+             * 通知のテスト
+             */
+            "test": string;
             /**
              * 連携アプリからの通知
              */
