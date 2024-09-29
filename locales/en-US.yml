@@ -2206,6 +2206,8 @@ _postForm:
   replyPlaceholder: "Reply to this note..."
   quotePlaceholder: "Quote this note..."
   channelPlaceholder: "Post to a channel..."
+  draftFoundOnOtherDevice: "Detected a draft that was not sent from this device"
+  useDraft: "Use this draft"
   _placeholders:
     a: "What are you up to?"
     b: "What's happening around you?"
