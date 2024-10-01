@@ -100,7 +100,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { inject, watch, nextTick, onMounted, defineAsyncComponent, provide, shallowRef, ref, computed, onUnmounted } from 'vue';
+import { inject, watch, nextTick, onMounted, defineAsyncComponent, provide, shallowRef, ref, computed, onUnmounted, onBeforeUnmount } from 'vue';
 import * as mfm from 'mfm-js';
 import * as Misskey from 'misskey-js';
 import autosize from 'autosize';
@@ -195,7 +195,7 @@ if (props.initialVisibleUsers) {
 	props.initialVisibleUsers.forEach(u => pushVisibleUser(u));
 }
 const reactionAcceptance = ref(defaultStore.state.reactionAcceptance);
-const autocomplete = ref(null);
+const autocomplete = ref<Autocomplete[]>([]);
 const draghover = ref(false);
 const quoteId = ref<string | null>(null);
 const hasNotSpecifiedMentions = ref(false);
@@ -572,7 +572,7 @@ const isResizing = ref(false);
 
 function autoResizeTextarea() {
 	if (isResizing.value) return;
-  
+
 	isResizing.value = true;
 	nextTick(() => {
 		if (textareaEl.value) {
@@ -826,6 +826,7 @@ async function checkServerDraft() {
 					if (draft.reactionAcceptance) {
 						reactionAcceptance.value = draft.reactionAcceptance;
 					}
+					autoResizeTextarea();
 				}
 			});
 		}
@@ -1100,9 +1101,16 @@ onMounted(() => {
 	}
 
 	// TODO: detach when unmount
-	if (textareaEl.value) new Autocomplete(textareaEl.value, text);
-	if (cwInputEl.value) new Autocomplete(cwInputEl.value, cw);
-	if (hashtagsInputEl.value) new Autocomplete(hashtagsInputEl.value, hashtags);
+	if (textareaEl.value) {
+		autocomplete.value.push(new Autocomplete(textareaEl.value, text));
+		autosize(textareaEl.value);
+	}
+	if (cwInputEl.value) {
+		autocomplete.value.push(new Autocomplete(cwInputEl.value, cw));
+	}
+	if (hashtagsInputEl.value) {
+		autocomplete.value.push(new Autocomplete(hashtagsInputEl.value, hashtags));
+	}
 
 	nextTick(() => {
 		// 書きかけの投稿を復元
@@ -1125,6 +1133,8 @@ onMounted(() => {
 				}
 				quoteId.value = draft.data.quoteId;
 				reactionAcceptance.value = draft.data.reactionAcceptance;
+
+				autoResizeTextarea();
 			} else {
 				checkServerDraft();
 			}
@@ -1158,6 +1168,13 @@ onMounted(() => {
 
 		nextTick(() => watchForDraft());
 	});
+});
+
+onBeforeUnmount(() => {
+	autocomplete.value.forEach(ac => ac.detach());
+	if (textareaEl.value) {
+		autosize.destroy(textareaEl.value);
+	}
 });
 
 onUnmounted(() => {
@@ -1418,6 +1435,9 @@ html[data-color-scheme=light] .preview {
 	width: 100%;
 	min-height: 90px;
 	height: 100%;
+	max-height: 75vh;
+	overflow-x: hidden !important;
+	resize: none;
 }
 
 .textCount {

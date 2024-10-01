@@ -8654,11 +8654,11 @@ export interface Locale extends ILocale {
          */
         "channelPlaceholder": string;
         /**
-         * このノートは他のデバイスで編集中です。
+         * 他のデバイスから送信されていないドラフトが検出されました
          */
         "draftFoundOnOtherDevice": string;
         /**
-         * このノートを使用する
+         * このドラフトを使用する
          */
         "useDraft": string;
         "_placeholders": {
