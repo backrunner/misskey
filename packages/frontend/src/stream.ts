@@ -5,16 +5,16 @@
 
 import * as Misskey from 'misskey-js';
 import { markRaw } from 'vue';
-import { $i } from '@/account.js';
 import { wsOrigin } from '@@/js/config.js';
+import { $i } from '@/account.js';
 // TODO: No WebsocketモードでStreamMockが使えそう
 //import { StreamMock } from '@/scripts/stream-mock.js';
 
 // heart beat interval in ms
-const HEART_BEAT_INTERVAL = 1000 * 60;
+const HEART_BEAT_INTERVAL = 1000 * 10;
 
 let stream: Misskey.IStream | null = null;
-let timeoutHeartBeat: number | null = null;
+let timeoutHeartBeat: number | undefined;
 let lastHeartbeatCall = 0;
 
 export function useStream(): Misskey.IStream {
@@ -25,7 +25,7 @@ export function useStream(): Misskey.IStream {
 		token: $i.token,
 	} : null));
 
-	if (timeoutHeartBeat) window.clearTimeout(timeoutHeartBeat);
+	if (timeoutHeartBeat !== undefined) window.clearTimeout(timeoutHeartBeat);
 	timeoutHeartBeat = window.setTimeout(heartbeat, HEART_BEAT_INTERVAL);
 
 	// send heartbeat right now when last send time is over HEART_BEAT_INTERVAL
@@ -42,10 +42,18 @@ export function useStream(): Misskey.IStream {
 }
 
 function heartbeat(): void {
-	if (stream) {
-		stream.heartbeat();
+	if (!stream) {
+		console.warn('Attempted to send heartbeat, but stream is not initialized');
+		return;
 	}
-	lastHeartbeatCall = Date.now();
-	if (timeoutHeartBeat) window.clearTimeout(timeoutHeartBeat);
-	timeoutHeartBeat = window.setTimeout(heartbeat, HEART_BEAT_INTERVAL);
+
+	try {
+		stream.heartbeat();
+		lastHeartbeatCall = Date.now();
+	} catch (error) {
+		console.error('Error sending heartbeat:', error);
+	} finally {
+		if (timeoutHeartBeat !== undefined) window.clearTimeout(timeoutHeartBeat);
+		timeoutHeartBeat = window.setTimeout(heartbeat, HEART_BEAT_INTERVAL);
+	}
 }
