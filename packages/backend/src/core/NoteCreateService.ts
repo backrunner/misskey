@@ -58,6 +58,7 @@ import { trackPromise } from '@/misc/promise-tracker.js';
 import { IdentifiableError } from '@/misc/identifiable-error.js';
 import { CollapsedQueue } from '@/misc/collapsed-queue.js';
 import { cleanLink } from '@/misc/link-cleaner.js';
+import { NoteDraftService } from './NoteDraftService.js';
 
 const FAST_URL_TESTER = new RE2('https?:\\/\\/');
 
@@ -203,6 +204,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 		private queueService: QueueService,
 		private fanoutTimelineService: FanoutTimelineService,
 		private noteReadService: NoteReadService,
+		private noteDraftService: NoteDraftService,
 		private notificationService: NotificationService,
 		private relayService: RelayService,
 		private federatedInstanceService: FederatedInstanceService,
@@ -526,6 +528,8 @@ export class NoteCreateService implements OnApplicationShutdown {
 					this.instanceChart.updateNote(i.host, note, true);
 				}
 			});
+		} else {
+			this.noteDraftService.deleteDraft(user as MiUser);
 		}
 
 		// ハッシュタグ更新

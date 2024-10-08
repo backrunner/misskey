@@ -54,7 +54,12 @@ export class NoteDraftService {
     }
 
     @bindThis
-    public async deleteDraft(user: MiUser): Promise<void> {
+    public async deleteDraft(user: MiUser): Promise<boolean> {
+    	const existingDraft = await this.noteDraftsRepository.findOne({ where: { userId: user.id } });
+    	if (!existingDraft) {
+    		return true;
+    	}
     	await this.noteDraftsRepository.delete({ userId: user.id });
+    	return true; // Draft successfully deleted
     }
 }
