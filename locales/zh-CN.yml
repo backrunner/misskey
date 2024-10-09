@@ -1877,6 +1877,7 @@ _serverDisconnectedBehavior:
   reload: "自动重载"
   dialog: "对话框警告"
   quiet: "安静警告"
+  silent: "静默"
 _channel:
   create: "创建频道"
   edit: "编辑频道"

@@ -1903,6 +1903,7 @@ _serverDisconnectedBehavior:
   reload: 自動重載
   dialog: 彈出式警告
   quiet: 非侵入式警告
+  silent: 不警告
 _channel:
   create: 建立頻道
   edit: 編輯頻道

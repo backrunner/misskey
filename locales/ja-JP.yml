@@ -1910,6 +1910,7 @@ _serverDisconnectedBehavior:
   reload: "自動でリロード"
   dialog: "ダイアログで警告"
   quiet: "控えめに警告"
+  silent: "警告しない"
 
 _channel:
   create: "チャンネルを作成"
