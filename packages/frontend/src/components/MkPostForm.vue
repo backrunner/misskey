@@ -783,6 +783,11 @@ function deleteDraft() {
 
 	miLocalStorage.setItem('drafts', JSON.stringify(draftData));
 
+	try {
+		saveDraftToServer.cancel();
+	} catch (error) {
+		console.error('Failed to cancel saving draft to server:', error);
+	}
 	deleteRemoteDraft();
 }
 

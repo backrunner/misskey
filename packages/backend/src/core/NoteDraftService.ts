@@ -4,21 +4,25 @@ import type { NoteDraftsRepository } from '@/models/_.js';
 import type { MiUser } from '@/models/User.js';
 import { MiNoteDraft } from '@/models/NoteDraft.js';
 import { bindThis } from '@/decorators.js';
+import { MemoryKVCache } from '@/misc/cache.js';
 
 import { IdService } from './IdService.js';
 
 @Injectable()
 export class NoteDraftService {
+	private draftCache: MemoryKVCache<MiNoteDraft>;
+
 	constructor(
-        @Inject(DI.noteDraftsRepository)
-        private noteDraftsRepository: NoteDraftsRepository,
+		@Inject(DI.noteDraftsRepository)
+		private noteDraftsRepository: NoteDraftsRepository,
+		private idService: IdService,
+	) {
+		this.draftCache = new MemoryKVCache<MiNoteDraft>(1000 * 60 * 30); // 30 minutes cache
+	}
 
-				private idService: IdService,
-	) {}
-
-    @bindThis
+	@bindThis
 	public async saveDraft(user: MiUser, data: Partial<MiNoteDraft>): Promise<MiNoteDraft> {
-		let draft = await this.noteDraftsRepository.findOne({ where: { userId: user.id } });
+		let draft = await this.getDraft(user);
 
 		const draftData: Partial<MiNoteDraft> = {
 			id: draft?.id ?? this.idService.gen(),
@@ -45,21 +49,28 @@ export class NoteDraftService {
 			await this.noteDraftsRepository.save(draft);
 		}
 
+		// Update cache
+		this.draftCache.set(user.id, draft);
+
 		return draft;
 	}
 
-    @bindThis
-    public async getDraft(user: MiUser): Promise<MiNoteDraft | null> {
-    	return await this.noteDraftsRepository.findOne({ where: { userId: user.id } });
-    }
+	@bindThis
+	public async getDraft(user: MiUser): Promise<MiNoteDraft | null> {
+		const cachedDraft = this.draftCache.get(user.id);
+		if (cachedDraft) return cachedDraft;
 
-    @bindThis
-    public async deleteDraft(user: MiUser): Promise<boolean> {
-    	const existingDraft = await this.noteDraftsRepository.findOne({ where: { userId: user.id } });
-    	if (!existingDraft) {
-    		return true;
-    	}
-    	await this.noteDraftsRepository.delete({ userId: user.id });
-    	return true; // Draft successfully deleted
-    }
+		const draft = await this.noteDraftsRepository.findOne({ where: { userId: user.id } });
+		if (draft) {
+			this.draftCache.set(user.id, draft);
+		}
+		return draft;
+	}
+
+	@bindThis
+	public async deleteDraft(user: MiUser): Promise<boolean> {
+		const result = await this.noteDraftsRepository.delete({ userId: user.id });
+		this.draftCache.delete(user.id);
+		return result.affected ? result.affected > 0 : true;
+	}
 }
