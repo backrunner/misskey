@@ -308,6 +308,7 @@ export class FileServerService {
 
 		if (typeof url !== 'string') {
 			reply.code(400);
+			reply.header('X-Error-Message', 'Invalid URL');
 			return;
 		}
 
@@ -335,6 +336,7 @@ export class FileServerService {
 			});
 
 			if (isSSRF) {
+				reply.header('X-Error-Message', 'Malicious request');
 				reply.code(400);
 				return;
 			}
@@ -369,9 +371,10 @@ export class FileServerService {
 		// verify the signature as what the external media proxy do when media proxy key was set.
 		if (this.config.mediaProxyKey) {
 			const toVerify = request.query.sign;
-			const sign = getProxySign(url, this.config.mediaProxyKey, url);
+			const sign = getProxySign(url, this.config.mediaProxyKey, this.config.url);
 			if (toVerify !== sign) {
 				reply.code(400);
+				reply.header('X-Error-Message', 'Invalid signature');
 				return;
 			}
 		}
