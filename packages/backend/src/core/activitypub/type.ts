@@ -125,6 +125,7 @@ export interface IPost extends IObject {
 		content: string;
 		mediaType: string;
 	};
+	updated?: string;
 	_misskey_quote?: string;
 	_misskey_content?: string;
 	quoteUrl?: string;
