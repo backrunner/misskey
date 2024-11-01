@@ -368,6 +368,12 @@ export class FileServerService {
 			);
 		}
 
+		if (!request.headers['user-agent']) {
+			throw new StatusError('User-Agent is required', 400, 'User-Agent is required');
+		} else if (request.headers['user-agent'].toLowerCase().indexOf('misskey/') !== -1) {
+			throw new StatusError('Refusing to proxy a request from another proxy', 403, 'Proxy is recursive');
+		}
+		
 		// verify the signature as what the external media proxy do when media proxy key was set.
 		if (this.config.mediaProxyKey) {
 			const toVerify = request.query.sign;
