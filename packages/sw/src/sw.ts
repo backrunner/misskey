@@ -12,8 +12,25 @@ import { createEmptyNotification, createNotification } from '@/scripts/create-no
 import { swLang } from '@/scripts/lang.js';
 import * as swos from '@/scripts/operations.js';
 
-globalThis.addEventListener('install', () => {
-	// ev.waitUntil(globalThis.skipWaiting());
+const STATIC_CACHE_NAME = `misskey-static-${_VERSION_}`;
+const PATHS_TO_CACHE = ['/assets/', '/emoji/', '/twemoji/', '/fluent-emoji/', '/vite/'];
+
+async function cacheWithFallback(cache, paths) {
+	for (const path of paths) {
+		try {
+			await cache.add(new Request(path, { credentials: 'same-origin' }));
+		} catch (error) {
+			console.error('Failed to cache with fallback:', error);
+		}
+	}
+}
+
+globalThis.addEventListener('install', (ev) => {
+	ev.waitUntil((async () => {
+		const cache = await caches.open(STATIC_CACHE_NAME);
+		await cacheWithFallback(cache, PATHS_TO_CACHE);
+		await globalThis.skipWaiting();
+	})());
 });
 
 globalThis.addEventListener('activate', ev => {
@@ -21,7 +38,7 @@ globalThis.addEventListener('activate', ev => {
 		caches.keys()
 			.then(cacheNames => Promise.all(
 				cacheNames
-					.filter((v) => v !== swLang.cacheName)
+					.filter((v) => v !== swLang.cacheName && !v.startsWith('misskey-static-'))
 					.map(name => caches.delete(name)),
 			))
 			.then(() => globalThis.clients.claim()),
@@ -36,10 +53,32 @@ async function offlineContentHTML() {
 		reload: i18n.ts?.reload ?? 'Reload',
 	};
 
-	return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta content="width=device-width,initial-scale=1"name="viewport"><title>${messages.title}</title><style>body{background-color:#0c1210;color:#dee7e4;font-family:Hiragino Maru Gothic Pro,BIZ UDGothic,Roboto,HelveticaNeue,Arial,sans-serif;line-height:1.35;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px;box-sizing:border-box}.icon{max-width:120px;width:100%;height:auto;margin-bottom:20px;}.message{text-align:center;font-size:20px;font-weight:700;margin-bottom:20px}.version{text-align:center;font-size:90%;margin-bottom:20px}button{padding:7px 14px;min-width:100px;font-weight:700;font-family:Hiragino Maru Gothic Pro,BIZ UDGothic,Roboto,HelveticaNeue,Arial,sans-serif;line-height:1.35;border-radius:99rem;background-color:#b4e900;color:#192320;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}button:hover{background-color:#c6ff03}</style></head><body><svg class="icon"fill="none"height="24"stroke="currentColor"stroke-linecap="round"stroke-linejoin="round"stroke-width="2"viewBox="0 0 24 24"width="24"xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z"fill="none"stroke="none"/><path d="M9.58 5.548c.24 -.11 .492 -.207 .752 -.286c1.88 -.572 3.956 -.193 5.444 1c1.488 1.19 2.162 3.007 1.77 4.769h.99c1.913 0 3.464 1.56 3.464 3.486c0 .957 -.383 1.824 -1.003 2.454m-2.997 1.033h-11.343c-2.572 -.004 -4.657 -2.011 -4.657 -4.487c0 -2.475 2.085 -4.482 4.657 -4.482c.13 -.582 .37 -1.128 .7 -1.62"/><path d="M3 3l18 18"/></svg><div class="message">${messages.header}</div><div class="version">v${_VERSION_}</div><button onclick="reloadPage()">${messages.reload}</button><script>function reloadPage(){location.reload(!0)}</script></body></html>`;
+	return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width,initial-scale=1"name="viewport"><title>${messages.title}</title><style>body{background-color:#0c1210;color:#dee7e4;font-family:Hiragino Maru Gothic Pro,BIZ UDGothic,Roboto,HelveticaNeue,Arial,sans-serif;line-height:1.35;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px;box-sizing:border-box}.icon{max-width:120px;width:100%;height:auto;margin-bottom:20px;}.message{text-align:center;font-size:20px;font-weight:700;margin-bottom:20px}.version{text-align:center;font-size:90%;margin-bottom:20px}button{padding:7px 14px;min-width:100px;font-weight:700;font-family:Hiragino Maru Gothic Pro,BIZ UDGothic,Roboto,HelveticaNeue,Arial,sans-serif;line-height:1.35;border-radius:99rem;background-color:#ff82ab;color:#192320;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}button:hover{background-color:#fac5eb}</style></head><body><svg class="icon"fill="none"height="24"stroke="currentColor"stroke-linecap="round"stroke-linejoin="round"stroke-width="2"viewBox="0 0 24 24"width="24"xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z"fill="none"stroke="none"/><path d="M9.58 5.548c.24 -.11 .492 -.207 .752 -.286c1.88 -.572 3.956 -.193 5.444 1c1.488 1.19 2.162 3.007 1.77 4.769h.99c1.913 0 3.464 1.56 3.464 3.486c0 .957 -.383 1.824 -1.003 2.454m-2.997 1.033h-11.343c-2.572 -.004 -4.657 -2.011 -4.657 -4.487c0 -2.475 2.085 -4.482 4.657 -4.482c.13 -.582 .37 -1.128 .7 -1.62"/><path d="M3 3l18 18"/></svg><div class="message">${messages.header}</div><div class="version">v${_VERSION_}</div><button onclick="reloadPage()">${messages.reload}</button><script>function reloadPage(){location.reload(!0)}</script></body></html>`;
 }
 
 globalThis.addEventListener('fetch', ev => {
+	const shouldCache = PATHS_TO_CACHE.some(path => ev.request.url.includes(path));
+
+	if (shouldCache) {
+		ev.respondWith(
+			caches.match(ev.request)
+				.then(response => {
+					if (response) return response;
+
+					return fetch(ev.request).then(response => {
+						if (!response || response.status !== 200 || response.type !== 'basic') return response;
+						const responseToCache = response.clone();
+						caches.open(STATIC_CACHE_NAME)
+							.then(cache => {
+								cache.put(ev.request, responseToCache);
+							});
+						return response;
+					});
+				}),
+		);
+		return;
+	}
+
 	let isHTMLRequest = false;
 	if (ev.request.headers.get('sec-fetch-dest') === 'document') {
 		isHTMLRequest = true;
@@ -65,7 +104,6 @@ globalThis.addEventListener('fetch', ev => {
 });
 
 globalThis.addEventListener('push', ev => {
-	// クライアント取得
 	ev.waitUntil(globalThis.clients.matchAll({
 		includeUncontrolled: true,
 		type: 'window',
@@ -73,10 +111,8 @@ globalThis.addEventListener('push', ev => {
 		const data: PushNotificationDataMap[keyof PushNotificationDataMap] = ev.data?.json();
 
 		switch (data.type) {
-			// case 'driveFileCreated':
 			case 'notification':
 			case 'unreadAntennaNote':
-				// 1日以上経過している場合は無視
 				if (Date.now() - data.dateTime > 1000 * 60 * 60 * 24) break;
 
 				return createNotification(data);
@@ -133,6 +169,9 @@ globalThis.addEventListener('notificationclick', (ev: ServiceWorkerGlobalScopeEv
 						break;
 					case 'showFollowRequests':
 						client = await swos.openClient('push', '/my/follow-requests', loginId);
+						break;
+					case 'edited':
+						if ('note' in data.body) client = await swos.openPost({ reply: data.body.note }, loginId);
 						break;
 					default:
 						switch (data.body.type) {
@@ -196,18 +235,15 @@ globalThis.addEventListener('notificationclose', (ev: ServiceWorkerGlobalScopeEv
 
 globalThis.addEventListener('message', (ev: ServiceWorkerGlobalScopeEventMap['message']) => {
 	ev.waitUntil((async (): Promise<void> => {
-		switch (ev.data) {
-			case 'clear':
-				// Cache Storage全削除
-				await caches.keys()
-					.then(cacheNames => Promise.all(
-						cacheNames.map(name => caches.delete(name)),
-					));
-				return; // TODO
+		if (ev.data === 'clear') {
+			await caches.keys()
+				.then(cacheNames => Promise.all(
+					cacheNames.map(name => caches.delete(name)),
+				));
+			return;
 		}
 
 		if (typeof ev.data === 'object') {
-			// E.g. '[object Array]' → 'array'
 			const otype = Object.prototype.toString.call(ev.data).slice(8, -1).toLowerCase();
 
 			if (otype === 'object') {
