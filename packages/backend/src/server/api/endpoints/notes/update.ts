@@ -6,8 +6,9 @@
 import ms from 'ms';
 import { Inject, Injectable } from '@nestjs/common';
 import { In } from 'typeorm';
+import { isEqual } from 'lodash';
 import { Endpoint } from '@/server/api/endpoint-base.js';
-import type { DriveFilesRepository, UsersRepository } from '@/models/_.js';
+import type { DriveFilesRepository, PollsRepository, UsersRepository } from '@/models/_.js';
 import { NoteEditService } from '@/core/NoteEditService.js';
 import { GetterService } from '@/server/api/GetterService.js';
 import { GlobalEventService } from '@/core/GlobalEventService.js';
@@ -131,6 +132,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 		@Inject(DI.usersRepository)
 		private usersRepository: UsersRepository,
 
+		@Inject(DI.pollsRepository)
+		private pollsRepository: PollsRepository,
+
 		private getterService: GetterService,
 		private globalEventService: GlobalEventService,
 		private noteEditService: NoteEditService,
@@ -142,7 +146,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 				throw err;
 			});
 
-			// この操作を行うのが投稿者とは限らない(例えばモデレーター)ため
 			if (!await this.roleService.isModerator(me)) {
 				if (note.userId !== me.id) {
 					throw new ApiError(meta.errors.accessDenied);
@@ -151,17 +154,37 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 				}
 			}
 
+			const newEditData = {
+				text: ps.text,
+				cw: ps.cw,
+				files: ps.fileIds ? await this.driveFilesRepository.findBy({ id: In(ps.fileIds) }) : undefined,
+				poll: ps.poll ? {
+					choices: ps.poll.choices,
+					multiple: ps.poll.multiple ?? false,
+					expiresAt: ps.poll.expiresAt ? new Date(ps.poll.expiresAt) : null,
+				} : undefined,
+			};
+
+			const currentData = {
+				text: note.text,
+				cw: note.cw,
+				files: await this.driveFilesRepository.findBy({ id: In(note.fileIds) }),
+				poll: note.hasPoll ? await this.pollsRepository.findOneByOrFail({ noteId: note.id }) : undefined,
+			};
+
+			if (isEqual(newEditData, currentData)) {
+				return;
+			}
+
 			try {
-				const targetNote = await this.noteEditService.edit(await this.usersRepository.findOneByOrFail({ id: note.userId }), note.id, {
-					text: ps.text,
-					cw: ps.cw,
-					files: ps.fileIds ? await this.driveFilesRepository.findBy({ id: In(ps.fileIds) }) : undefined,
-					poll: ps.poll ? {
-						choices: ps.poll.choices,
-						multiple: ps.poll.multiple ?? false,
-						expiresAt: ps.poll.expiresAt ? new Date(ps.poll.expiresAt) : null,
-					} : undefined,
-				}, undefined, me);
+				const targetNote = await this.noteEditService.edit(
+					await this.usersRepository.findOneByOrFail({ id: note.userId }),
+					note.id,
+					newEditData,
+					undefined,
+					me,
+				);
+
 				this.globalEventService.publishNoteStream(note.id, 'edited', {
 					note: targetNote,
 				});

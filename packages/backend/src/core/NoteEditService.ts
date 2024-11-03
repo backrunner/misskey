@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable no-param-reassign */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /*
  * SPDX-FileCopyrightText: syuilo and other misskey contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -6,13 +9,13 @@
 import { setImmediate } from 'node:timers/promises';
 import * as mfm from 'mfm-js';
 import { Inject, Injectable, OnApplicationShutdown } from '@nestjs/common';
-import { In, LessThan } from 'typeorm';
+import { In } from 'typeorm';
 import { extractCustomEmojisFromMfm } from '@/misc/extract-custom-emojis-from-mfm.js';
 import { extractHashtags } from '@/misc/extract-hashtags.js';
 import type { IMentionedRemoteUsers } from '@/models/Note.js';
 import { MiNote } from '@/models/Note.js';
 import { MiNoteHistory } from '@/models/NoteHistory.js';
-import type { ChannelsRepository, FollowingsRepository, InstancesRepository, MiFollowing, NotesRepository, NoteHistoriesRepository, UserProfilesRepository, UsersRepository, PollsRepository, DriveFilesRepository } from '@/models/_.js';
+import type { ChannelsRepository, FollowingsRepository, InstancesRepository, NotesRepository, NoteHistoriesRepository, UserProfilesRepository, UsersRepository, PollsRepository, DriveFilesRepository } from '@/models/_.js';
 import type { MiDriveFile } from '@/models/DriveFile.js';
 import { concat } from '@/misc/prelude/array.js';
 import { IdService } from '@/core/IdService.js';
@@ -141,7 +144,6 @@ export class NoteEditService implements OnApplicationShutdown {
 	}, targetId: MiNote['id'], data: Option, silent = false, editor?: MiUser): Promise<MiNote> {
 		const targetNote = await this.notesRepository.findOneByOrFail({ id: targetId });
 
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 		if (targetNote == null) {
 			throw new Error('No such note');
 		}
@@ -225,7 +227,7 @@ export class NoteEditService implements OnApplicationShutdown {
 		if (!tags || !emojis || !mentionedUsers) {
 			const tokens = (data.text ? mfm.parse(data.text)! : []);
 			const cwTokens = data.cw ? mfm.parse(data.cw)! : [];
-			const choiceTokens = data.poll && data.poll.choices
+			const choiceTokens = data.poll?.choices
 				? concat(data.poll.choices.map(choice => mfm.parse(choice)!))
 				: [];
 
@@ -356,9 +358,11 @@ export class NoteEditService implements OnApplicationShutdown {
 		// Register host
 		if (this.userEntityService.isRemoteUser(user)) {
 			this.federatedInstanceService.fetch(user.host).then(async i => {
-				this.instancesRepository.increment({ id: i.id }, 'notesCount', 1);
-				if ((await this.metaService.fetch()).enableChartsForFederatedInstances) {
-					this.instanceChart.updateNote(i.host, note, true);
+				if (i) {
+					this.instancesRepository.increment({ id: i.id }, 'notesCount', 1);
+					if ((await this.metaService.fetch()).enableChartsForFederatedInstances) {
+						this.instanceChart.updateNote(i.host, note, true);
+					}
 				}
 			});
 		}
@@ -456,7 +460,7 @@ export class NoteEditService implements OnApplicationShutdown {
 	}
 
 	@bindThis
-	public onApplicationShutdown(signal?: string | undefined): void {
+	public onApplicationShutdown(): void {
 		this.dispose();
 	}
 }
