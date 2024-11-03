@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { VNode, h, SetupContext, provide } from 'vue';
+import { VNode, h, SetupContext, provide, defineAsyncComponent } from 'vue';
 import * as mfm from 'mfm-js';
 import * as Misskey from 'misskey-js';
 import { host } from '@@/js/config.js';
@@ -448,11 +448,19 @@ export default function (props: MfmProps, { emit }: { emit: SetupContext<MfmEven
 			}
 
 			case 'mathInline': {
-				return [h('code', token.props.formula)];
+				const SKFormula = defineAsyncComponent(() => import('@/components/SKFormula.vue'));
+				return [h('bdi', h(SKFormula, {
+					formula: token.props.formula,
+					block: false,
+				}))];
 			}
 
 			case 'mathBlock': {
-				return [h('code', token.props.formula)];
+				const SKFormula = defineAsyncComponent(() => import('@/components/SKFormula.vue'));
+				return [h('bdi', { class: 'block' }, h(SKFormula, {
+					formula: token.props.formula,
+					block: true,
+				}))];
 			}
 
 			case 'search': {
