@@ -51,51 +51,52 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</button>
 		</div>
 	</header>
-	<MkNoteSimple v-if="reply" :class="$style.targetNote" :note="reply"/>
-	<MkNoteSimple v-if="renote" :class="$style.targetNote" :note="renote"/>
-	<div v-if="quoteId" :class="$style.withQuote"><i class="ti ti-quote"></i> {{ i18n.ts.quoteAttached }}<button @click="quoteId = null"><i class="ti ti-x"></i></button></div>
-	<div v-if="visibility === 'specified'" :class="$style.toSpecified">
-		<span style="margin-right: 8px;">{{ i18n.ts.recipient }}</span>
-		<div :class="$style.visibleUsers">
-			<span v-for="u in visibleUsers" :key="u.id" :class="$style.visibleUser">
-				<MkAcct :user="u"/>
-				<button class="_button" style="padding: 4px 8px;" @click="removeVisibleUser(u)"><i class="ti ti-x"></i></button>
-			</span>
-			<button class="_buttonPrimary" style="padding: 4px; border-radius: 8px;" @click="addVisibleUser"><i class="ti ti-plus ti-fw"></i></button>
+	<section :class="$style.postFormMain">
+		<MkNoteSimple v-if="reply" :class="$style.targetNote" :note="reply"/>
+		<MkNoteSimple v-if="renote" :class="$style.targetNote" :note="renote"/>
+		<div v-if="quoteId" :class="$style.withQuote"><i class="ti ti-quote"></i> {{ i18n.ts.quoteAttached }}<button @click="quoteId = null"><i class="ti ti-x"></i></button></div>
+		<div v-if="visibility === 'specified'" :class="$style.toSpecified">
+			<span style="margin-right: 8px;">{{ i18n.ts.recipient }}</span>
+			<div :class="$style.visibleUsers">
+				<span v-for="u in visibleUsers" :key="u.id" :class="$style.visibleUser">
+					<MkAcct :user="u"/>
+					<button class="_button" style="padding: 4px 8px;" @click="removeVisibleUser(u)"><i class="ti ti-x"></i></button>
+				</span>
+				<button class="_buttonPrimary" style="padding: 4px; border-radius: 8px;" @click="addVisibleUser"><i class="ti ti-plus ti-fw"></i></button>
+			</div>
 		</div>
-	</div>
-	<MkInfo v-if="hasNotSpecifiedMentions" warn :class="$style.hasNotSpecifiedMentions">{{ i18n.ts.notSpecifiedMentionWarning }} - <button class="_textButton" @click="addMissingMention()">{{ i18n.ts.add }}</button></MkInfo>
-	<input v-show="useCw" ref="cwInputEl" v-model="cw" :class="$style.cw" :placeholder="i18n.ts.annotation" @keydown="onKeydown" @keyup="onKeyup" @compositionend="onCompositionEnd">
-	<div :class="[$style.textOuter, { [$style.withCw]: useCw }]">
-		<div v-if="channel" :class="$style.colorBar" :style="{ background: channel.color }"></div>
-		<textarea ref="textareaEl" v-model="text" :class="[$style.text]" :disabled="posting || posted" :readonly="textAreaReadOnly" :placeholder="placeholder" data-cy-post-form-text @keydown="onKeydown" @keyup="onKeyup" @paste="onPaste" @compositionupdate="onCompositionUpdate" @compositionend="onCompositionEnd"/>
-		<div v-if="maxTextLength - textLength < 100" :class="['_acrylic', $style.textCount, { [$style.textOver]: textLength > maxTextLength }]">{{ maxTextLength - textLength }}</div>
-	</div>
-	<input v-show="withHashtags" ref="hashtagsInputEl" v-model="hashtags" :class="$style.hashtags" :placeholder="i18n.ts.hashtags" list="hashtags">
-	<XPostFormAttaches v-model="files" @detach="detachFile" @changeSensitive="updateFileSensitive" @changeName="updateFileName" @replaceFile="replaceFile"/>
-	<MkPollEditor v-if="poll" v-model="poll" @destroyed="poll = null"/>
-	<MkNotePreview v-if="showPreview" :class="$style.preview" :text="text" :files="files" :poll="poll ?? undefined" :useCw="useCw" :cw="cw" :user="postAccount ?? $i"/>
-	<div v-if="showingOptions" style="padding: 8px 16px;">
-	</div>
-	<footer :class="$style.footer">
-		<div :class="$style.footerLeft">
-			<button v-tooltip="i18n.ts.attachFile" class="_button" :class="$style.footerButton" @click="chooseFileFrom"><i class="ti ti-photo-plus"></i></button>
-			<button v-tooltip="i18n.ts.poll" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: poll }]" @click="togglePoll"><i class="ti ti-chart-arrows"></i></button>
-			<button v-tooltip="i18n.ts.useCw" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: useCw }]" @click="useCw = !useCw"><i class="ti ti-eye-off"></i></button>
-			<button v-tooltip="i18n.ts.mention" class="_button" :class="$style.footerButton" @click="insertMention"><i class="ti ti-at"></i></button>
-			<button v-tooltip="i18n.ts.hashtags" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: withHashtags }]" @click="withHashtags = !withHashtags"><i class="ti ti-hash"></i></button>
-			<button v-if="postFormActions.length > 0" v-tooltip="i18n.ts.plugins" class="_button" :class="$style.footerButton" @click="showActions"><i class="ti ti-plug"></i></button>
-			<button v-tooltip="i18n.ts.emoji" :class="['_button', $style.footerButton]" @click="insertEmoji"><i class="ti ti-mood-happy"></i></button>
-			<button v-if="showAddMfmFunction" v-tooltip="i18n.ts.addMfmFunction" :class="['_button', $style.footerButton]" @click="insertMfmFunction"><i class="ti ti-palette"></i></button>
+		<MkInfo v-if="hasNotSpecifiedMentions" warn :class="$style.hasNotSpecifiedMentions">{{ i18n.ts.notSpecifiedMentionWarning }} - <button class="_textButton" @click="addMissingMention()">{{ i18n.ts.add }}</button></MkInfo>
+		<input v-show="useCw" ref="cwInputEl" v-model="cw" :class="$style.cw" :placeholder="i18n.ts.annotation" @keydown="onKeydown" @keyup="onKeyup" @compositionend="onCompositionEnd">
+		<div :class="[$style.textOuter, { [$style.withCw]: useCw }]">
+			<div v-if="channel" :class="$style.colorBar" :style="{ background: channel.color }"></div>
+			<textarea ref="textareaEl" v-model="text" :class="[$style.text]" :disabled="posting || posted" :readonly="textAreaReadOnly" :placeholder="placeholder" data-cy-post-form-text @keydown="onKeydown" @keyup="onKeyup" @paste="onPaste" @compositionupdate="onCompositionUpdate" @compositionend="onCompositionEnd"/>
+			<div v-if="maxTextLength - textLength < 100" :class="['_acrylic', $style.textCount, { [$style.textOver]: textLength > maxTextLength }]">{{ maxTextLength - textLength }}</div>
 		</div>
-		<div :class="$style.footerRight">
-			<button v-tooltip="i18n.ts.previewNoteText" class="_button" :class="[$style.footerButton, { [$style.previewButtonActive]: showPreview }]" @click="showPreview = !showPreview"><i class="ti ti-eye"></i></button>
-			<!--<button v-tooltip="i18n.ts.more" class="_button" :class="$style.footerButton" @click="showingOptions = !showingOptions"><i class="ti ti-dots"></i></button>-->
-		</div>
-	</footer>
-	<datalist id="hashtags">
-		<option v-for="hashtag in recentHashtags" :key="hashtag" :value="hashtag"/>
-	</datalist>
+		<input v-show="withHashtags" ref="hashtagsInputEl" v-model="hashtags" :class="$style.hashtags" :placeholder="i18n.ts.hashtags" list="hashtags">
+		<XPostFormAttaches v-model="files" @detach="detachFile" @changeSensitive="updateFileSensitive" @changeName="updateFileName" @replaceFile="replaceFile"/>
+		<MkPollEditor v-if="poll" v-model="poll" @destroyed="poll = null"/>
+		<MkNotePreview v-if="showPreview" :class="$style.preview" :text="text" :files="files" :poll="poll ?? undefined" :useCw="useCw" :cw="cw" :user="postAccount ?? $i"/>
+		<div v-if="showingOptions" style="padding: 8px 16px;"></div>
+		<footer :class="$style.footer">
+			<div :class="$style.footerLeft">
+				<button v-tooltip="i18n.ts.attachFile" class="_button" :class="$style.footerButton" @click="chooseFileFrom"><i class="ti ti-photo-plus"></i></button>
+				<button v-tooltip="i18n.ts.poll" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: poll }]" @click="togglePoll"><i class="ti ti-chart-arrows"></i></button>
+				<button v-tooltip="i18n.ts.useCw" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: useCw }]" @click="useCw = !useCw"><i class="ti ti-eye-off"></i></button>
+				<button v-tooltip="i18n.ts.mention" class="_button" :class="$style.footerButton" @click="insertMention"><i class="ti ti-at"></i></button>
+				<button v-tooltip="i18n.ts.hashtags" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: withHashtags }]" @click="withHashtags = !withHashtags"><i class="ti ti-hash"></i></button>
+				<button v-if="postFormActions.length > 0" v-tooltip="i18n.ts.plugins" class="_button" :class="$style.footerButton" @click="showActions"><i class="ti ti-plug"></i></button>
+				<button v-tooltip="i18n.ts.emoji" :class="['_button', $style.footerButton]" @click="insertEmoji"><i class="ti ti-mood-happy"></i></button>
+				<button v-if="showAddMfmFunction" v-tooltip="i18n.ts.addMfmFunction" :class="['_button', $style.footerButton]" @click="insertMfmFunction"><i class="ti ti-palette"></i></button>
+			</div>
+			<div :class="$style.footerRight">
+				<button v-tooltip="i18n.ts.previewNoteText" class="_button" :class="[$style.footerButton, { [$style.previewButtonActive]: showPreview }]" @click="showPreview = !showPreview"><i class="ti ti-eye"></i></button>
+				<!--<button v-tooltip="i18n.ts.more" class="_button" :class="$style.footerButton" @click="showingOptions = !showingOptions"><i class="ti ti-dots"></i></button>-->
+			</div>
+		</footer>
+		<datalist id="hashtags">
+			<option v-for="hashtag in recentHashtags" :key="hashtag" :value="hashtag"/>
+		</datalist>
+	</section>
 </div>
 </template>
 
@@ -108,6 +109,7 @@ import insertTextAtCursor from 'insert-text-at-cursor';
 import { toASCII } from 'punycode/';
 import { host, url } from '@@/js/config.js';
 import { throttle } from 'throttle-debounce';
+import type { PostFormProps } from '@/types/post-form.js';
 import MkNoteSimple from '@/components/MkNoteSimple.vue';
 import MkNotePreview from '@/components/MkNotePreview.vue';
 import XPostFormAttaches from '@/components/MkPostFormAttaches.vue';
@@ -131,7 +133,6 @@ import { miLocalStorage } from '@/local-storage.js';
 import { claimAchievement } from '@/scripts/achievements.js';
 import { emojiPicker } from '@/scripts/emoji-picker.js';
 import { mfmFunctionPicker } from '@/scripts/mfm-function-picker.js';
-import type { PostFormProps } from '@/types/post-form.js';
 
 const $i = signinRequired();
 
@@ -586,7 +587,7 @@ function onKeydown(ev: KeyboardEvent) {
 	// justEndedComposition.value is for Safari, which keyDown occurs after compositionend.
 	// ev.isComposing is for another browsers.
 	if (ev.key === 'Escape' && !justEndedComposition.value && !ev.isComposing) emit('esc');
-	
+
 	autoResizeTextarea();
 }
 
@@ -1419,6 +1420,11 @@ html[data-color-scheme=light] .preview {
 	padding-top: 8px;
 	padding-bottom: 8px;
 	border-top: solid 0.5px var(--MI_THEME-divider);
+}
+
+.postFormMain {
+	max-height: 85vh;
+	overflow-y: auto;
 }
 
 .textOuter {

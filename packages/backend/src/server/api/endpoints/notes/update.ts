@@ -6,7 +6,7 @@
 import ms from 'ms';
 import { Inject, Injectable } from '@nestjs/common';
 import { In } from 'typeorm';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import type { DriveFilesRepository, PollsRepository, UsersRepository } from '@/models/_.js';
 import { NoteEditService } from '@/core/NoteEditService.js';
