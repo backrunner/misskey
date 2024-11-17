@@ -60,6 +60,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { inject, watch, nextTick, onMounted, provide, shallowRef, ref, computed } from 'vue';
 import * as mfm from 'mfm-js';
 import * as Misskey from 'misskey-js';
+import autosize from 'autosize';
 import insertTextAtCursor from 'insert-text-at-cursor';
 import { toASCII } from 'punycode/';
 import { host, url } from '@@/js/config.js';
@@ -309,7 +310,7 @@ function replaceFile(file: Misskey.entities.DriveFile, newFile: Misskey.entities
 function upload(file: File, name?: string): void {
 	if (props.mock) return;
 
-	uploadFile(file, defaultStore.state.uploadFolder, name).then(res => {
+	uploadFile(file, defaultStore.state.uploadFolder!, name).then(res => {
 		files.value.push(res);
 	});
 }
@@ -321,17 +322,35 @@ function clear() {
 	quoteId.value = null;
 }
 
+const isResizing = ref(false);
+
+function autoResizeTextarea() {
+	if (isResizing.value) return;
+
+	isResizing.value = true;
+	nextTick(() => {
+		if (textareaEl.value) {
+			autosize.update(textareaEl.value);
+		}
+		isResizing.value = false;
+	});
+}
+
 function onKeydown(ev: KeyboardEvent) {
 	if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey) && canPost.value) post();
 	if (ev.key === 'Escape') emit('esc');
+
+	autoResizeTextarea();
 }
 
 function onCompositionUpdate(ev: CompositionEvent) {
 	imeText.value = ev.data;
+	autoResizeTextarea();
 }
 
 function onCompositionEnd(ev: CompositionEvent) {
 	imeText.value = '';
+	autoResizeTextarea();
 }
 
 async function onPaste(ev: ClipboardEvent) {
@@ -381,6 +400,8 @@ async function onPaste(ev: ClipboardEvent) {
 			upload(file, `${fileName}.txt`);
 		});
 	}
+
+	autoResizeTextarea();
 }
 
 function onDragover(ev) {
@@ -684,6 +705,8 @@ onMounted(() => {
 				if (draft.data.poll) {
 					poll.value = draft.data.poll;
 				}
+
+				autoResizeTextarea();
 			}
 		}
 
