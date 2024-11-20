@@ -780,6 +780,15 @@ defineExpose({
 	margin: 12px 12px 12px 6px;
 	vertical-align: bottom;
 
+	&:focus-visible {
+		outline: none;
+
+		> .submitInner {
+			outline: 2px solid var(--MI_THEME-fgOnAccent);
+			outline-offset: -4px;
+		}
+	}
+
 	&:disabled {
 		opacity: 0.7;
 	}
@@ -789,14 +798,14 @@ defineExpose({
 	}
 
 	&:not(:disabled):hover {
-		>.inner {
-			background: linear-gradient(90deg, var(--X8), var(--X8));
+		> .submitInner {
+			background: linear-gradient(90deg, hsl(from var(--MI_THEME-accent) h s calc(l + 5)), hsl(from var(--MI_THEME-accent) h s calc(l + 5)));
 		}
 	}
 
 	&:not(:disabled):active {
-		>.inner {
-			background: linear-gradient(90deg, var(--X8), var(--X8));
+		> .submitInner {
+			background: linear-gradient(90deg, hsl(from var(--MI_THEME-accent) h s calc(l + 5)), hsl(from var(--MI_THEME-accent) h s calc(l + 5)));
 		}
 	}
 }
@@ -818,8 +827,8 @@ defineExpose({
 	border-radius: 6px;
 	min-width: 90px;
 	box-sizing: border-box;
-	color: var(--fgOnAccent);
-	background: linear-gradient(90deg, var(--buttonGradateA), var(--buttonGradateB));
+	color: var(--MI_THEME-fgOnAccent);
+	background: linear-gradient(90deg, var(--MI_THEME-buttonGradateA), var(--MI_THEME-buttonGradateB));
 }
 
 .headerRightItem {
@@ -864,6 +873,15 @@ defineExpose({
 	min-height: 75px;
 	max-height: 150px;
 	overflow: auto;
+	background-size: auto auto;
+}
+
+html[data-color-scheme=dark] .preview {
+	background-image: repeating-linear-gradient(135deg, transparent, transparent 5px, #0004 5px, #0004 10px);
+}
+
+html[data-color-scheme=light] .preview {
+	background-image: repeating-linear-gradient(135deg, transparent, transparent 5px, #00000005 5px, #00000005 10px);
 }
 
 .targetNote {
@@ -872,7 +890,7 @@ defineExpose({
 
 .withQuote {
 	margin: 0 0 8px 0;
-	color: var(--accent);
+	color: var(--MI_THEME-accent);
 }
 
 .toSpecified {
@@ -911,7 +929,7 @@ defineExpose({
 	border: none;
 	border-radius: 0;
 	background: transparent;
-	color: var(--fg);
+	color: var(--MI_THEME-fg);
 	font-family: inherit;
 
 	&:focus {
@@ -926,14 +944,14 @@ defineExpose({
 .cw {
 	z-index: 1;
 	padding-bottom: 8px;
-	border-bottom: solid 0.5px var(--divider);
+	border-bottom: solid 0.5px var(--MI_THEME-divider);
 }
 
 .hashtags {
 	z-index: 1;
 	padding-top: 8px;
 	padding-bottom: 8px;
-	border-top: solid 0.5px var(--divider);
+	border-top: solid 0.5px var(--MI_THEME-divider);
 }
 
 .textOuter {
@@ -951,6 +969,9 @@ defineExpose({
 	width: 100%;
 	min-height: 90px;
 	height: 100%;
+	max-height: 75vh;
+	overflow-x: hidden !important;
+	resize: none;
 }
 
 .textCount {
@@ -959,7 +980,7 @@ defineExpose({
 	right: 2px;
 	padding: 4px 6px;
 	font-size: .9em;
-	color: var(--warn);
+	color: var(--MI_THEME-warn);
 	border-radius: 6px;
 	min-width: 1.6em;
 	text-align: center;
@@ -1003,16 +1024,16 @@ defineExpose({
 	border-radius: 6px;
 
 	&:hover {
-		background: var(--X5);
+		background: var(--MI_THEME-X5);
 	}
 
 	&.footerButtonActive {
-		color: var(--accent);
+		color: var(--MI_THEME-accent);
 	}
 }
 
 .previewButtonActive {
-	color: var(--accent);
+	color: var(--MI_THEME-accent);
 }
 
 @container (max-width: 500px) {
@@ -1071,6 +1092,5 @@ defineExpose({
 	.headerRight {
 		gap: 0;
 	}
-
 }
 </style>
