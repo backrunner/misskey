@@ -152,6 +152,6 @@ export class UrlPreviewService {
 			contentLengthRequired: meta.urlPreviewRequireContentLength,
 		});
 
-		return this.httpRequestService.getJson<SummalyResult>(`${proxy}?${queryStr}`);
+		return this.httpRequestService.getJson<SummalyResult>(`${proxy}?${queryStr}`, 'application/json, */*', undefined, true);
 	}
 }
