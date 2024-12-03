@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+
 /* eslint-disable no-param-reassign */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /*
@@ -7,6 +7,7 @@
  */
 
 import { setImmediate } from 'node:timers/promises';
+import RE2 from 're2';
 import * as mfm from 'mfm-js';
 import { Inject, Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { In } from 'typeorm';
@@ -48,6 +49,9 @@ import { SearchService } from '@/core/SearchService.js';
 import { UtilityService } from '@/core/UtilityService.js';
 import { UserBlockingService } from '@/core/UserBlockingService.js';
 import { ModerationLogService } from '@/core/ModerationLogService.js';
+import { cleanLink } from '@/misc/link-cleaner.js';
+
+const FAST_URL_TESTER = new RE2('https?:\\/\\/');
 
 type MinimumUser = {
 	id: MiUser['id'];
@@ -215,6 +219,9 @@ export class NoteEditService implements OnApplicationShutdown {
 				data.text = data.text.slice(0, DB_MAX_NOTE_TEXT_LENGTH);
 			}
 			data.text = data.text.trim();
+			if (FAST_URL_TESTER.test(data.text)) {
+				data.text = await cleanLink(data.text);
+			}
 		} else {
 			data.text = null;
 		}

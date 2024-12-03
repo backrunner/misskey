@@ -674,7 +674,10 @@ onMounted(() => {
 	}
 
 	// TODO: detach when unmount
-	if (textareaEl.value) new Autocomplete(textareaEl.value, text);
+	if (textareaEl.value) {
+		new Autocomplete(textareaEl.value, text);
+		autosize(textareaEl.value);
+	}
 	if (cwInputEl.value) new Autocomplete(cwInputEl.value, cw);
 	if (hashtagsInputEl.value) new Autocomplete(hashtagsInputEl.value, hashtags);
 
@@ -705,10 +708,10 @@ onMounted(() => {
 				if (draft.data.poll) {
 					poll.value = draft.data.poll;
 				}
-
-				autoResizeTextarea();
 			}
 		}
+
+		autoResizeTextarea();
 
 		nextTick(() => watchForDraft());
 	});

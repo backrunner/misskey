@@ -1,15 +1,15 @@
 import RE2 from 're2';
 
 const URL_EXTRACTOR = new RE2(
-	'(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)',
+	'(?:http[s]?:\\/\\/.)?(?:www\\.)?[-a-zA-Z0-9@%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b(?:[-a-zA-Z0-9@:%_\\+.~#?&\\/\\/=]*)',
 	'gi',
 );
 
 const UTM_MATCHER = /([?&])(yclid|gclid|utm_(source|campaign|medium|term))=[^&]+/gi;
 
-const getSafeBiliLink = async (url: string): Promise<string> => {
+const getRedirectedUrl = async (url: string): Promise<string | null> => {
 	const controller = new AbortController();
-	const timeoutId = setTimeout(() => controller.abort(), 3000);
+	const timeoutId = setTimeout(() => controller.abort(), 5 * 1000);
 
 	try {
 		const response = await fetch(url, {
@@ -20,18 +20,14 @@ const getSafeBiliLink = async (url: string): Promise<string> => {
 
 		clearTimeout(timeoutId);
 
-		if (response.status === 302) {
+		if ([301, 302].includes(response.status)) {
 			const location = response.headers.get('location');
 			if (location) {
-				const redirectUrl = new URL(location, url);
-				if (redirectUrl.href.startsWith('https://www.bilibili.com/video/BV')) {
-					redirectUrl.search = '';
-					return redirectUrl.toString();
+				if (/^https?:\/\//.test(location)) {
+					return location;
+				} else {
+					return new URL(location, url).toString();
 				}
-				if (redirectUrl.searchParams.has('mid')) {
-					redirectUrl.searchParams.delete('mid');
-				}
-				return redirectUrl.toString();
 			}
 		}
 
@@ -44,6 +40,65 @@ const getSafeBiliLink = async (url: string): Promise<string> => {
 				console.error('Error occurred:', error);
 			}
 		}
+		return null;
+	}
+};
+
+const getSafeBiliLink = async (url: string): Promise<string> => {
+	try {
+		const redirectedUrl = await getRedirectedUrl(url);
+		if (!redirectedUrl) {
+			return url;
+		}
+		if (redirectedUrl.startsWith('https://www.bilibili.com/video/BV')) {
+			const parsed = new URL(redirectedUrl);
+			parsed.search = '';
+			return parsed.toString();
+		} else {
+			return redirectedUrl;
+		}
+	} catch (error) {
+		console.warn('Cannot get redirected URL:', url, error);
+		return url;
+	}
+};
+
+export const getSafeXhsLink = async (url: string): Promise<string> => {
+	try {
+		const redirectedUrl = await getRedirectedUrl(url);
+		if (!redirectedUrl) {
+			return url;
+		}
+		if (redirectedUrl.startsWith('https://www.xiaohongshu.com/')) {
+			const parsed = new URL(redirectedUrl);
+			parsed.searchParams.delete('apptime');
+			parsed.searchParams.delete('shareRedId');
+			parsed.searchParams.delete('share_id');
+			return parsed.toString();
+		} else {
+			return redirectedUrl;
+		}
+	} catch (error) {
+		console.warn('Cannot get redirected URL:', url, error);
+		return url;
+	}
+};
+
+const getSafeNeteaseLink = async (url: string): Promise<string> => {
+	try {
+		const redirectedUrl = await getRedirectedUrl(url);
+		if (!redirectedUrl) {
+			return url;
+		}
+		if (redirectedUrl.startsWith('https://y.music.163.com/')) {
+			const parsed = new URL(redirectedUrl);
+			parsed.searchParams.delete('userid');
+			parsed.searchParams.delete('app_version');
+			return parsed.toString();
+		}
+		return redirectedUrl;
+	} catch (error) {
+		console.warn('Cannot get redirected URL:', url, error);
 		return url;
 	}
 };
@@ -62,14 +117,27 @@ export const cleanLink = async (noteText: string) => {
 		urls.push(match[0]);
 	}
 
+	console.log('urls', urls);
+
 	let newText = noteText;
 
 	await Promise.all(urls.map(async (url) => {
 		try {
 			const parsed = new URL(url);
+			console.log('parsed', parsed);
 			switch (parsed.hostname) {
 				case 'b23.tv': {
 					const safeUrl = await getSafeBiliLink(url);
+					newText = newText.replace(url, safeUrl);
+					break;
+				}
+				case 'xhslink.com': {
+					const safeUrl = await getSafeXhsLink(url);
+					newText = newText.replace(url, safeUrl);
+					break;
+				}
+				case '163cn.tv': {
+					const safeUrl = await getSafeNeteaseLink(url);
 					newText = newText.replace(url, safeUrl);
 					break;
 				}
@@ -87,6 +155,8 @@ export const cleanLink = async (noteText: string) => {
 			console.warn('Cannot parse URL in the note text:', url, error);
 		}
 	}));
+
+	console.log('newText', newText);
 
 	return newText;
 };

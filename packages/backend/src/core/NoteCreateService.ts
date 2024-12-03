@@ -533,7 +533,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 				});
 			}
 		}
-		
+
 		// Delete draft
 		if (!this.userEntityService.isRemoteUser(user)) {
 			this.noteDraftService.deleteDraft(user as MiUser);
