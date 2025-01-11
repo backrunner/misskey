@@ -40,6 +40,7 @@ const instances = ref<Misskey.entities.FederationInstance[]>();
 misskeyApiGet('federation/instances', {
 	sort: '+pubSub',
 	limit: 20,
+	blocked: 'false',
 }).then(_instances => {
 	instances.value = _instances;
 });
